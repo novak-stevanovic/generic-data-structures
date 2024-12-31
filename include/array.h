@@ -62,14 +62,20 @@ int arr_remove(struct Array* array, size_t pos);
  * on success - 0 */
 int arr_pop(struct Array* array);
 
+/* Calculates address of element with index specified by <pos>.
+ * Return value:
+ * on success: address of element with index specified by <pos> 
+ * on faulure: NULL */
+void* arr_at(const struct Array* array, size_t pos);
+
 /* Returns current count of elements in <array> */
-size_t get_count(struct Array* array);
+size_t arr_get_count(const struct Array* array);
 
 /* Returns max count of elements in <array> */
-size_t get_max_count(struct Array* array);
+size_t arr_get_max_count(const struct Array* array);
 
 /* Returns address of data in <array> */
-void* get_data(struct Array* array);
+void* arr_get_data(const struct Array* array);
 
 
 #endif

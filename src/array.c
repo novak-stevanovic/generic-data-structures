@@ -152,19 +152,19 @@ void* arr_at(const struct Array* array, size_t pos)
     return _arr_at_incl(array, pos);
 }
 
-size_t get_count(struct Array* array)
+size_t arr_get_count(const struct Array* array)
 {
     ASSERT_NON_NULL_ARG(array, "array");
 
     return array->count;
 }
-size_t get_max_count(struct Array* array)
+size_t arr_get_max_count(const struct Array* array)
 {
     ASSERT_NON_NULL_ARG(array, "array");
 
     return array->max_count;
 }
-void* get_data(struct Array* array)
+void* arr_get_data(const struct Array* array)
 {
     ASSERT_NON_NULL_ARG(array, "array");
 
