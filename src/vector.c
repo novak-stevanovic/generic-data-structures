@@ -6,37 +6,41 @@
  * Return value:
  * on success: address of <vector>->data.
  * on failure: NULL. */
-void* _vec_alloc_new_chunk(struct Vector* vector, size_t _resize_count);
+void* _alloc_new_chunk(struct Vector* vector, size_t _resize_count);
 
 /* Calls _alloc_new_chunk() with parameters (<vector>, <vector>->_resize_count).
  * Return value: Same as _alloc_new_chunk(). */
-void* _vec_alloc_new_chunk_rsz(struct Vector* vector);
+void* _alloc_new_chunk_rsz(struct Vector* vector);
+
+/* Calculates <vector>'s tail.
+ * Return value: Pointer to address of last element in Vector <vector>. */
+void* _get_vector_tail(struct Vector* vector);
 
 /* Calculates position of element with starting address <start_addr> in Vector <vector>.
  * Return value: Index of calculated position. */
-size_t _vec_get_element_idx(struct Vector* vector, void* start_addr);
+size_t _get_element_idx(struct Vector* vector, void* start_addr);
 
 /* Calculates starting address of element with index <idx> in Vector <vector>.
  * Return value: Pointer to calculated starting address. */
-void* _vec_get_element_addr(struct Vector* vector, size_t idx);
+void* _get_element_addr(struct Vector* vector, size_t idx);
 
 /* Shift elements starting from index <start_idx> rightward by calling memmove().
  * Return value:
  * on success: 0
  * on failure: 1 - memmove() failed. */
-int _vec_shift_right(struct Vector* vector, size_t start_idx);
+int _shift_right(struct Vector* vector, size_t start_idx);
 
 /* Shift elements starting from index <start_idx> leftward by calling memmove().
  * Return value:
  * on success: 0
  * on failure: 1 - memmove() failed. */
-int _vec_shift_left(struct Vector* vector, size_t start_idx);
+int _shift_left(struct Vector* vector, size_t start_idx);
 
 /* Calculates if it is possible to shrink Vector <vector> by at least <vector>->resize_count. Performs the shrinking if possible.
  * Return value:
  * on success: 0(shrinking was not performed), 1(shrinking was successfully perfmormed)
  * on failure: 2(shrinking was possible but failed - realloc() failed) */
-int _vec_shrink_if_possible(struct Vector* vector);
+int _shrink_if_possible(struct Vector* vector);
 
 void __print_int_vector_debug(struct Vector* v);
 
@@ -58,7 +62,7 @@ int vec_init(struct Vector* vector, size_t _initial_count, size_t _resize_count,
     vector->count = 0;
     vector->alloced_count = 0;
 
-    if (_vec_alloc_new_chunk(vector, _initial_count) == NULL) return 1;
+    if (_alloc_new_chunk(vector, _initial_count) == NULL) return 1;
 
     return 0;
 }
@@ -84,7 +88,7 @@ int vec_assign(struct Vector* vector, void* data, size_t pos)
     if(pos == vector->count)
         ASSERT(vector->count < vector->alloced_count, "INVALID POS, ARRAY_COUNT, MAX_COUNT");
 
-    void* addr = _vec_get_element_addr(vector, pos);
+    void* addr = _get_element_addr(vector, pos);
     ASSERT_NON_NULL_VAL(addr, "addr");
 
     void* memcpy_addr = memcpy(addr, data, vector->element_size);
@@ -102,10 +106,10 @@ int vec_insert(struct Vector* vector, void* data, size_t pos)
     ASSERT_NON_NULL_ARG(data, "data");
 
     if(vector->count == vector->alloced_count)
-        if (_vec_alloc_new_chunk_rsz(vector) == NULL) return 1;
+        if (_alloc_new_chunk_rsz(vector) == NULL) return 1;
 
     if(pos < vector->count)
-        if(_vec_shift_right(vector, pos) != 0) return 3;
+        if(_shift_right(vector, pos) != 0) return 3;
     
     int assign_status = vec_assign(vector, data, pos);
     if(assign_status != 0) return 2;
@@ -129,13 +133,13 @@ int vec_remove(struct Vector* vector, size_t pos)
 
    if(pos < (vector->count - 1))
    {
-       int shift_status = _vec_shift_left(vector, pos + 1);
+       int shift_status = _shift_left(vector, pos + 1);
        if(shift_status != 0) return 1;
    }
 
    vector->count--;
 
-   int shrink_status = _vec_shrink_if_possible(vector); 
+   int shrink_status = _shrink_if_possible(vector); 
    if((shrink_status != 0) && (shrink_status != 1)) return 2;
 
    return 0;
@@ -152,12 +156,11 @@ void* vec_at(struct Vector* vector, size_t pos)
     ASSERT_NON_NULL_VAL(vector->data, "vector->data");
     ASSERT(pos < vector->count, "Invalid value of argument 'idx'\n.");
 
-    return _vec_get_element_addr(vector, pos);
+    return _get_element_addr(vector, pos);
 }
 
-// --------------------------------------------------------------------------------------------
 
-void* _vec_alloc_new_chunk(struct Vector* vector, size_t _resize_count)
+void* _alloc_new_chunk(struct Vector* vector, size_t _resize_count)
 {
     ASSERT_NON_NULL_ARG(vector, "vector");
 
@@ -176,23 +179,30 @@ void* _vec_alloc_new_chunk(struct Vector* vector, size_t _resize_count)
     return vector->data;
 }
 
-void* _vec_alloc_new_chunk_rsz(struct Vector* vector)
+void* _alloc_new_chunk_rsz(struct Vector* vector)
 {
-    return _vec_alloc_new_chunk(vector, vector->resize_count);
+    return _alloc_new_chunk(vector, vector->resize_count);
 }
 
-size_t _vec_get_element_idx(struct Vector* vector, void* start_addr)
+void* _get_vector_tail(struct Vector* vector)
+{
+    ASSERT_NON_NULL_ARG(vector, "vector");
+    ASSERT_NON_NULL_VAL(vector->data, "vector->data");
+
+    return vec_at(vector, vector->count - 1);
+}
+
+size_t _get_element_idx(struct Vector* vector, void* start_addr)
 {
     ASSERT_NON_NULL_ARG(vector, "vector");
     ASSERT_NON_NULL_VAL(vector->data, "vector->data");
     void* vector_data = vector->data;
-    void* vector_tail = vec_at(vector, vector->count - 1);
-    ASSERT(((start_addr >= vector_data) && (start_addr <= vector_tail)), "Invalid value of 'start_addr' argument.\n");
+    ASSERT(((start_addr >= vector_data) && (start_addr <= _get_vector_tail(vector))), "Invalid value of 'start_addr' argument.\n");
 
     return ((size_t)(start_addr - vector_data)) / vector->element_size;
 }
 
-void* _vec_get_element_addr(struct Vector* vector, size_t idx)
+void* _get_element_addr(struct Vector* vector, size_t idx)
 {
     ASSERT_NON_NULL_ARG(vector, "vector");
     ASSERT_NON_NULL_VAL(vector->data, "vector->data");
@@ -201,7 +211,7 @@ void* _vec_get_element_addr(struct Vector* vector, size_t idx)
     return vector->data + (idx * vector->element_size);
 }
 
-int _vec_shift_right(struct Vector* vector, size_t start_idx)
+int _shift_right(struct Vector* vector, size_t start_idx)
 {
     ASSERT_NON_NULL_ARG(vector, "vector");
     ASSERT_NON_NULL_VAL(vector->data, "vector->data");
@@ -214,13 +224,13 @@ int _vec_shift_right(struct Vector* vector, size_t start_idx)
     size_t step = vector->element_size;
     size_t elements_shifted = vector_count - start_idx;
 
-    void* start_pos = _vec_get_element_addr(vector, start_idx);
+    void* start_pos = _get_element_addr(vector, start_idx);
 
     int memmove_status = (memmove(start_pos + step, start_pos, step * elements_shifted) == NULL);
     return memmove_status;
 }
 
-int _vec_shift_left(struct Vector* vector, size_t start_idx)
+int _shift_left(struct Vector* vector, size_t start_idx)
 {
     ASSERT_NON_NULL_ARG(vector, "vector");
     ASSERT_NON_NULL_VAL(vector->data, "vector->data");
@@ -232,15 +242,31 @@ int _vec_shift_left(struct Vector* vector, size_t start_idx)
     size_t step = vector->element_size;
     size_t elements_shifted = vector_count - start_idx;
 
-    void* start_pos = _vec_get_element_addr(vector, start_idx) - step;
+    void* start_pos = _get_element_addr(vector, start_idx) - step;
 
     return (memmove(start_pos, start_pos + step, step * elements_shifted) == NULL);
 }
 
-int _vec_shrink_if_possible(struct Vector* vector)
+void __print_int_vector_debug(struct Vector* v)
+{
+    printf("vector tail: %p, count: %ld, alloced_count: %ld, resize_count: %ld, vector_vector: %p\n", _get_vector_tail(v), v->count, v->alloced_count, v->resize_count, v->data);
+
+    for (size_t i = 0; i < v->count; i++) {
+        void* el_addr = vec_at(v, i);
+        size_t el_idx = _get_element_idx(v, el_addr);
+        int el_val = *((int*)el_addr);
+        void* el_addr2 = _get_element_addr(v, i);
+        printf("addr: %p ret_idx: %ld val: %d ret_addr:%p i: %ld\n", el_addr, el_idx, el_val, el_addr2, i);
+    }
+    putchar('\n');
+}
+
+// TODO
+int _shrink_if_possible(struct Vector* vector)
 {
     ASSERT_NON_NULL_ARG(vector, "vector");
 
+    printf("SHRINKING\n");
     size_t count = vector->count;
     size_t alloced_count = vector->alloced_count;
     size_t resize_count = vector->resize_count;
@@ -249,6 +275,8 @@ int _vec_shrink_if_possible(struct Vector* vector)
 
     size_t chunks_required = (count - initial_count) / resize_count + ((count - initial_count) % resize_count > 0);
     size_t chunks_alloced = (alloced_count - initial_count) / resize_count + ((alloced_count - initial_count) % resize_count > 0);
+
+    printf("count: %ld alloced_count: %ld resize_count: %ld element_size: %ld chunks_required: %d chunks_alloced: %d\n", count, alloced_count, resize_count, element_size, chunks_required, chunks_alloced );
 
     if(chunks_required < chunks_alloced)
     {

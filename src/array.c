@@ -4,7 +4,7 @@
 #include <string.h>
 
 /* Initializes the fields curr_count, max_count, element_size - They are shared between funcs arr_init_static, arr_init_dynamic. */
-void _arr_init_shared(struct Array* array, size_t max_count, size_t element_size);
+void _init_shared(struct Array* array, size_t max_count, size_t element_size);
 
 /* Function returns address of element with index <pos>. Keep in mind that if <pos> == array->count, the function(unlike arr_at()) will work - it will return the address of location
  * where to append the next element 
@@ -17,13 +17,13 @@ void* _arr_at_incl(const struct Array* array, size_t pos);
  * Return value:
  * on success: 0
  * on failure: 1 - memmove() failed. */
-int _arr_shift_right(struct Array* array, size_t start_idx);
+int _shift_right(struct Array* array, size_t start_idx);
 
 /* Shift elements starting from index <start_idx> leftward by calling memmove().
  * Return value:
  * on success: 0
  * on failure: 1 - memmove() failed. */
-int _arr_shift_left(struct Array* array, size_t start_idx);
+int _shift_left(struct Array* array, size_t start_idx);
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ int arr_init_static(struct Array* array, size_t max_count, size_t element_size, 
     ASSERT_NON_NULL_ARG(array, "array");
     ASSERT_NON_NULL_ARG(static_arr_ptr, "static_arr_ptr");
 
-    _arr_init_shared(array, max_count, element_size);
+    _init_shared(array, max_count, element_size);
     array->data = static_arr_ptr;
     array->alloc_type = ALLOC_TYPE_STATIC;
 
@@ -43,7 +43,7 @@ int arr_init_dynamic(struct Array* array, size_t max_count, size_t element_size)
 {
     ASSERT_NON_NULL_ARG(array, "array");
 
-    _arr_init_shared(array, max_count, element_size);
+    _init_shared(array, max_count, element_size);
     array->data = malloc(max_count * element_size);
     if(array->data == NULL)
     {
@@ -99,7 +99,7 @@ int arr_insert(struct Array* array, const void* data, size_t pos)
 
     if(pos < array->count)
     {
-        int shift_status = _arr_shift_right(array, pos);
+        int shift_status = _shift_right(array, pos);
         if(shift_status != 0) return 1;
     }
 
@@ -122,7 +122,7 @@ int arr_remove(struct Array* array, size_t pos)
 
     if(pos < (array->count - 1))
     {
-        int shift_status = _arr_shift_left(array, pos + 1);
+        int shift_status = _shift_left(array, pos + 1);
         if(shift_status != 0) return 1;
     }
 
@@ -163,7 +163,7 @@ void* arr_get_array(const struct Array* array)
 
 // -------------------------------------------------------------------------------------------------------------------------------------
 
-void _arr_init_shared(struct Array* array, size_t max_count, size_t element_size)
+void _init_shared(struct Array* array, size_t max_count, size_t element_size)
 {
     array->count = 0;
     array->max_count = max_count;
@@ -180,7 +180,7 @@ void* _arr_at_incl(const struct Array* array, size_t pos)
     return array->data + pos * array->element_size;
 }
 
-int _arr_shift_right(struct Array* array, size_t start_idx)
+int _shift_right(struct Array* array, size_t start_idx)
 {
     ASSERT(start_idx < array->count, "Invalid start_idx parameter.\n");
     ASSERT_NON_NULL_ARG(array, "array");
@@ -197,7 +197,7 @@ int _arr_shift_right(struct Array* array, size_t start_idx)
     return memmove_status;
 }
 
-int _arr_shift_left(struct Array* array, size_t start_idx)
+int _shift_left(struct Array* array, size_t start_idx)
 {
     ASSERT_NON_NULL_ARG(array, "array");
     ASSERT_NON_NULL_VAL(array->data, "array->data");
