@@ -53,9 +53,9 @@ int _vec_shrink_if_possible(struct Vector* vector);
 struct Vector* vec_init(size_t _initial_count, size_t _resize_count, size_t _element_size)
 {
 
-    ASSERT(_initial_count != 0, "Invalid '_initial_count' parameter");
-    ASSERT(_resize_count != 0, "Invalid '_resize_count' parameter");
-    ASSERT(_element_size != 0, "Invalid '_element_size' parameter");
+    assert(_initial_count != 0);
+    assert(_resize_count != 0);
+    assert(_element_size != 0);
 
     struct Vector* vector = (struct Vector*)malloc(sizeof(struct Vector));
 
@@ -76,7 +76,7 @@ struct Vector* vec_init(size_t _initial_count, size_t _resize_count, size_t _ele
 
 void vec_destruct(struct Vector* vector)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
+    assert(vector != NULL);
 
     free(vector->data);
     free(vector);
@@ -84,13 +84,13 @@ void vec_destruct(struct Vector* vector)
 
 int vec_assign(struct Vector* vector, const void* data, size_t pos)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
-    ASSERT(pos <= vector->count, "Value of <pos> must be lesser or equal to vector->curr_count");
+    assert(vector != NULL);
+    assert(pos <= vector->count);
     if(pos == vector->count)
-        ASSERT(vector->count < vector->alloced_count, "INVALID POS, ARRAY_COUNT, MAX_COUNT");
+        assert(vector->count < vector->alloced_count);
 
     void* addr = _vec_get_element_addr(vector, pos);
-    ASSERT_NON_NULL_VAL(addr, "addr");
+    assert(addr != NULL);
 
     void* memcpy_addr = memcpy(addr, data, vector->element_size);
     if(memcpy_addr == NULL) return 1;
@@ -100,11 +100,11 @@ int vec_assign(struct Vector* vector, const void* data, size_t pos)
 
 int vec_insert(struct Vector* vector, const void* data, size_t pos)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
-    ASSERT_NON_NULL_VAL(vector->data, "vector->data");
+    assert(vector != NULL);
+    assert(vector->data != NULL);
 
-    ASSERT(pos <= vector->count, "Invalid insert operation.\n");
-    ASSERT_NON_NULL_ARG(data, "data");
+    assert(pos <= vector->count);
+    assert(data != NULL);
 
     if(vector->count == vector->alloced_count)
         if (_vec_alloc_new_chunk_rsz(vector) == NULL) return 1;
@@ -128,9 +128,9 @@ int vec_append(struct Vector* vector, const void* data)
 
 int vec_remove(struct Vector* vector, size_t pos)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
-    ASSERT_NON_NULL_VAL(vector->data, "vector->data");
-    ASSERT(pos < vector->count, "Invalid value of argument 'pos'.\n");
+    assert(vector != NULL);
+    assert(vector->data != NULL);
+    assert(pos < vector->count);
 
    if(pos < (vector->count - 1))
    {
@@ -153,37 +153,37 @@ int vec_pop(struct Vector* vector)
 
 void* vec_at(const struct Vector* vector, size_t pos)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
-    ASSERT_NON_NULL_VAL(vector->data, "vector->data");
-    ASSERT(pos < vector->count, "Invalid value of argument 'idx'\n.");
+    assert(vector != NULL);
+    assert(vector->data != NULL);
+    assert(pos < vector->count);
 
     return _vec_get_element_addr(vector, pos);
 }
 
 size_t vec_get_count(const struct Vector* vector)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
+    assert(vector != NULL);
 
     return vector->count;
 }
 
 size_t vec_get_resize_count(const struct Vector* vector)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
+    assert(vector != NULL);
 
     return vector->resize_count;
 }
 
 void vec_set_resize_count(struct Vector* vector, size_t resize_count)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
+    assert(vector != NULL);
 
     vector->resize_count = resize_count;
 }
 
 void* vec_get_data(const struct Vector* vector)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
+    assert(vector != NULL);
 
     return vector->data;
 }
@@ -192,7 +192,7 @@ void* vec_get_data(const struct Vector* vector)
 
 void* _vec_alloc_new_chunk(struct Vector* vector, size_t _resize_count)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
+    assert(vector != NULL);
 
     size_t new_alloced_count = vector->alloced_count + _resize_count;
     size_t element_size = vector->element_size;
@@ -216,34 +216,34 @@ void* _vec_alloc_new_chunk_rsz(struct Vector* vector)
 
 size_t _vec_get_element_idx(struct Vector* vector, void* start_addr)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
-    ASSERT_NON_NULL_VAL(vector->data, "vector->data");
+    assert(vector != NULL);
+    assert(vector->data != NULL);
     void* vector_data = vector->data;
-    ASSERT(vector->count > 0, "Vector count must be greater than 0");
+    assert(vector->count > 0);
     void* vector_tail = vec_at(vector, vector->count - 1);
-    ASSERT(((start_addr >= vector_data) && (start_addr <= vector_tail)), "Invalid value of 'start_addr' argument.\n");
+    assert(((start_addr >= vector_data) && (start_addr <= vector_tail)));
 
     return ((size_t)(start_addr - vector_data)) / vector->element_size;
 }
 
 void* _vec_get_element_addr(const struct Vector* vector, size_t idx)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
-    ASSERT_NON_NULL_VAL(vector->data, "vector->data");
-    ASSERT(idx <= vector->count, "Invalid value of argument 'idx'\n.");
+    assert(vector != NULL);
+    assert(vector->data != NULL);
+    assert(idx <= vector->count);
 
     return vector->data + (idx * vector->element_size);
 }
 
 int _vec_shift_right(struct Vector* vector, size_t start_idx)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
-    ASSERT_NON_NULL_VAL(vector->data, "vector->data");
-    ASSERT(start_idx < vector->count, "Invalid start_idx parameter.\n");
+    assert(vector != NULL);
+    assert(vector->data != NULL);
+    assert(start_idx < vector->count);
 
     size_t vector_count = vector->count;
 
-    ASSERT(vector_count < vector->alloced_count, "_shift_right called when count == _alloced_count.\n");
+    assert(vector_count < vector->alloced_count);
 
     size_t step = vector->element_size;
     size_t elements_shifted = vector_count - start_idx;
@@ -256,12 +256,12 @@ int _vec_shift_right(struct Vector* vector, size_t start_idx)
 
 int _vec_shift_left(struct Vector* vector, size_t start_idx)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
-    ASSERT_NON_NULL_VAL(vector->data, "vector->data");
+    assert(vector != NULL);
+    assert(vector->data != NULL);
 
     size_t vector_count = vector->count;
 
-    ASSERT(start_idx < vector_count, "Invalid argument 'start_idx' passed.\n");
+    assert(start_idx < vector_count);
 
     size_t step = vector->element_size;
     size_t elements_shifted = vector_count - start_idx;
@@ -271,10 +271,9 @@ int _vec_shift_left(struct Vector* vector, size_t start_idx)
     return (memmove(start_pos, start_pos + step, step * elements_shifted) == NULL);
 }
 
-// TODO
 int _vec_shrink_if_possible(struct Vector* vector)
 {
-    ASSERT_NON_NULL_ARG(vector, "vector");
+    assert(vector != NULL);
 
     size_t count = vector->count;
     size_t alloced_count = vector->alloced_count;
