@@ -85,4 +85,7 @@ void vec_set_resize_count(struct Vector* vector, size_t resize_count);
 /* Returns address of data in <vector>. */
 void* vec_get_data(const struct Vector* vector);
 
+/* Performs sizeof(struct Vector) and returns the value */
+size_t vec_get_struct_size();
+
 #endif

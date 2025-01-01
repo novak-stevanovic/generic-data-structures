@@ -77,5 +77,7 @@ size_t arr_get_max_count(const struct Array* array);
 /* Returns address of data in <array> */
 void* arr_get_data(const struct Array* array);
 
+/* Performs sizeof(struct Array) and returns the value */
+size_t arr_get_struct_size();
 
 #endif

@@ -158,17 +158,24 @@ size_t arr_get_count(const struct Array* array)
 
     return array->count;
 }
+
 size_t arr_get_max_count(const struct Array* array)
 {
     assert(array != NULL);
 
     return array->max_count;
 }
+
 void* arr_get_data(const struct Array* array)
 {
     assert(array != NULL);
 
     return array->data;
+}
+
+size_t arr_get_struct_size()
+{
+    return sizeof(struct Array);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------------------

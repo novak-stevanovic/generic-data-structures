@@ -188,6 +188,11 @@ void* vec_get_data(const struct Vector* vector)
     return vector->data;
 }
 
+size_t vec_get_struct_size()
+{
+    return sizeof(struct Vector);
+}
+
 // --------------------------------------------------------------------------------------------
 
 void* _vec_alloc_new_chunk(struct Vector* vector, size_t _resize_count)
