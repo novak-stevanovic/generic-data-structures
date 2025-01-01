@@ -20,7 +20,7 @@ $(C_OBJ): build/%.o: src/%.c build
 	$(CC) $(C_OBJ_FLAGS) $< -o $@
 
 test: $(C_OBJ) build
-	gcc -c -Iinclude -Wall src/tests.c -o build/tests.o
+	gcc -c -Iinclude -Wall tests.c -o build/tests.o
 	gcc $(C_OBJ) build/tests.o -o test
 
 build:

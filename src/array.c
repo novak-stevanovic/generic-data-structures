@@ -46,7 +46,7 @@ struct Array* arr_init_static(size_t max_count, size_t element_size, void* stati
     array->data = static_arr_ptr;
     array->data_alloc_type = ALLOC_TYPE_STATIC;
 
-    return 0;
+    return array;
 }
 
 struct Array* arr_init_dynamic(size_t max_count, size_t element_size)
@@ -63,7 +63,7 @@ struct Array* arr_init_dynamic(size_t max_count, size_t element_size)
     }
     array->data_alloc_type = ALLOC_TYPE_DYNAMIC;
 
-    return 0;
+    return array;
 }
 
 void arr_destruct(struct Array* array)
