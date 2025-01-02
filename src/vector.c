@@ -69,7 +69,7 @@ struct Vector* vec_init(size_t initial_alloced_count, size_t resize_count, size_
 
     if (_vec_alloc_new_chunk(vector, initial_alloced_count) == NULL) return NULL;
 
-    return 0;
+    return vector;
 }
 
 void vec_destruct(struct Vector* vector)
