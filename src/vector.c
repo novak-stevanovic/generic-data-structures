@@ -52,8 +52,6 @@ int _vec_shrink_if_possible(struct Vector* vector);
 
 struct Vector* vec_init(size_t _initial_count, size_t _resize_count, size_t _element_size)
 {
-
-    assert(_initial_count != 0);
     assert(_resize_count != 0);
     assert(_element_size != 0);
 
