@@ -8,11 +8,11 @@ struct Vector
     size_t alloced_count;
     size_t resize_count;
     size_t element_size;
-    size_t initial_count;
+    size_t initial_alloced_count;
     void* data;
 };
 
-/* Resizes Vector <vector> by performing alloc/realloc. Call to this function extends memory by _resize_count * <vector>->_element_size.
+/* Resizes Vector <vector> by performing alloc/realloc. Call to this function extends memory by <_resize_count> * <vector>->_element_size.
  * Return value:
  * on success: address of <vector>->data.
  * on failure: NULL. */
@@ -50,24 +50,24 @@ int _vec_shrink_if_possible(struct Vector* vector);
 
 // --------------------------------------------------------------------------------------------
 
-struct Vector* vec_init(size_t _initial_count, size_t _resize_count, size_t _element_size)
+struct Vector* vec_init(size_t initial_alloced_count, size_t resize_count, size_t element_size)
 {
-    assert(_resize_count != 0);
-    assert(_element_size != 0);
+    assert(resize_count != 0);
+    assert(element_size != 0);
 
     struct Vector* vector = (struct Vector*)malloc(sizeof(struct Vector));
 
     if(vector == NULL) return NULL;
 
-    vector->element_size = _element_size;
-    vector->resize_count = _resize_count;
-    vector->initial_count = _initial_count;
+    vector->element_size = element_size;
+    vector->resize_count = resize_count;
+    vector->initial_alloced_count = initial_alloced_count;
 
     vector->data = NULL;
     vector->count = 0;
     vector->alloced_count = 0;
 
-    if (_vec_alloc_new_chunk(vector, _initial_count) == NULL) return NULL;
+    if (_vec_alloc_new_chunk(vector, initial_alloced_count) == NULL) return NULL;
 
     return 0;
 }
@@ -282,7 +282,7 @@ int _vec_shrink_if_possible(struct Vector* vector)
     size_t alloced_count = vector->alloced_count;
     size_t resize_count = vector->resize_count;
     size_t element_size = vector->element_size;
-    size_t initial_count = vector->initial_count;
+    size_t initial_count = vector->initial_alloced_count;
 
     size_t chunks_required = (count - initial_count) / resize_count + ((count - initial_count) % resize_count > 0);
     size_t chunks_alloced = (alloced_count - initial_count) / resize_count + ((alloced_count - initial_count) % resize_count > 0);

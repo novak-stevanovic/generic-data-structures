@@ -11,7 +11,7 @@
 * size_t alloced_count - current array capacity,
 * size_t resize_count - how much the array resizes on realloac,
 * size_t element_size - size of 1 element,
-* size_t initial_count - initial vector capacity
+* size_t initial_alloced_count - initial vector capacity
 * void* data - ptr to data. 
 * Modifying any fields except resize_count will result in breaking the code. */
 struct Vector;
@@ -20,7 +20,7 @@ struct Vector;
  * Return value:
  * on success: address of dynamically allocated struct Vector. 
  * on failure: NULL - malloc() failed for either struct Vector or vector data. */
-struct Vector* vec_init(size_t _initial_count, size_t _resize_count, size_t _element_size);
+struct Vector* vec_init(size_t initial_alloced_count, size_t resize_count, size_t element_size);
 
 /* Frees dynamically allocated memory. Sets fields to default values. */
 void vec_destruct(struct Vector* vector);
