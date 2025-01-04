@@ -8,12 +8,8 @@ struct Array
     size_t count;
     size_t max_count;
     size_t element_size;
-    int data_alloc_type;
     void* data;
 };
-
-/* Initializes the fields curr_count, max_count, element_size - They are shared between funcs arr_init_static, arr_init_dynamic. */
-struct Array* _arr_init_shared(size_t max_count, size_t element_size);
 
 /* Function returns address of element with index <pos>. Keep in mind that if <pos> == array->count, the function(unlike arr_at()) will work - it will return the address of location
  * where to append the next element 
@@ -36,32 +32,23 @@ int _arr_shift_left(struct Array* array, size_t start_idx);
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-struct Array* arr_init_static(size_t max_count, size_t element_size, void* static_arr_ptr)
+struct Array* arr_init(size_t max_count, size_t element_size)
 {
-    assert(static_arr_ptr != NULL);
+    struct Array* array = (struct Array*)malloc(sizeof(struct Array));
 
-    struct Array* array = _arr_init_shared(max_count, element_size);
-    if(array == NULL) return NULL;
-
-    array->data = static_arr_ptr;
-    array->data_alloc_type = ALLOC_TYPE_STATIC;
-
-    return array;
-}
-
-struct Array* arr_init_dynamic(size_t max_count, size_t element_size)
-{
-    struct Array* array = _arr_init_shared(max_count, element_size);
+    array->max_count = max_count;
+    array->element_size = element_size;
+    array->count = 0;
 
     if(array == NULL) return NULL;
 
     array->data = malloc(max_count * element_size);
+
     if(array->data == NULL)
     {
         free(array);
         return NULL;
     }
-    array->data_alloc_type = ALLOC_TYPE_DYNAMIC;
 
     return array;
 }
@@ -71,7 +58,9 @@ void arr_destruct(struct Array* array)
     assert(array != NULL);
 
     free(array->data);
-    free(array);
+    array->count = 0;
+    array->element_size = 0;
+    array->max_count = 0;
 }
 
 int arr_assign(struct Array* array, size_t pos, const void* data)
@@ -179,20 +168,6 @@ size_t arr_get_struct_size()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------------------
-
-struct Array* _arr_init_shared(size_t max_count, size_t element_size)
-{
-    assert(max_count > 0);
-    struct Array* array = (struct Array*)malloc(sizeof(struct Array));
-
-    if(array == NULL) return NULL;
-
-    array->count = 0;
-    array->max_count = max_count;
-    array->element_size = element_size;
-
-    return array;
-}
 
 void* _arr_at_incl(const struct Array* array, size_t pos)
 {

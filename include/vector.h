@@ -3,29 +3,28 @@
 
 #include <stdlib.h>
 
-#define DEFAULT_RESIZE_COUNT 100
-#define DEFAULT_SIZE_COUNT 100
+#define DEFAULT_RESIZE_COUNT 25
+#define DEFAULT_SIZE_COUNT 50
 
 /* Fields:
 * size_t count - current count of elements,
 * size_t alloced_count - current array capacity,
-* size_t resize_count - how much the array resizes on realloac,
-* size_t element_size - size of 1 element,
-* size_t initial_alloced_count - initial vector capacity
-* void* data - ptr to data. 
-* Modifying any fields except resize_count will result in breaking the code. */
+* size_t chunk_count - number of elements in each chunk - how much the array resizes on realloac.
+* size_t element_size - size of 1 element in array,
+* size_t min_count - initial vector capacity. The <vector>->data field will always have capacity for <min_count> count of elements
+* void* data - ptr to data(the vector itself). */
 struct Vector;
 
-/* Allocates memory for struct Vector <vector>, initializes struct fields. Allocates the memory for the first <_initial_count> elements of the array. 
+/* Allocates memory for struct Vector <vector>, initializes struct fields. Allocates the memory for the first <min_count> elements of the array. 
  * Return value:
  * on success: address of dynamically allocated struct Vector. 
  * on failure: NULL - malloc() failed for either struct Vector or vector data. */
-struct Vector* vec_init(size_t initial_alloced_count, size_t resize_count, size_t element_size);
+struct Vector* vec_init(size_t min_count, size_t chunk_count, size_t element_size);
 
 /* Frees dynamically allocated memory. Sets fields to default values. */
 void vec_destruct(struct Vector* vector);
 
-/* Calls vec_init with parameter <_resize_count> set to DEFAULT_RESIZE_COUNT. */
+/* Calls vec_init with parameter <chunk_count> set to DEFAULT_RESIZE_COUNT. */
 #define VEC_INIT_DEFAULT(vector, element_size) vec_init(vector, DEFAULT_SIZE_COUNT, DEFAULT_RESIZE_COUNT, element_size)
 
 /* Assigns data pointed to by <data> to position <pos> inside Vector <vector>. Keep in mind that the maximum value of <pos> must be 
@@ -80,7 +79,7 @@ size_t vec_get_count(const struct Vector* vector);
 size_t vec_get_resize_count(const struct Vector* vector);
 
 /* Sets resize count of <vector>. This will impact resizing operations. */
-void vec_set_resize_count(struct Vector* vector, size_t resize_count);
+void vec_set_resize_count(struct Vector* vector, size_t chunk_count);
 
 /* Returns address of data in <vector>. */
 void* vec_get_data(const struct Vector* vector);

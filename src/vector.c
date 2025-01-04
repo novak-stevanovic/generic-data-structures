@@ -1,26 +1,19 @@
+#include <stdio.h>
+#include <string.h>
+
 #include "vector.h"
 #include "assert.h"
-#include <string.h>
+#include "misc.h"
 
 struct Vector
 {
     size_t count;
     size_t alloced_count;
-    size_t resize_count;
+    size_t chunk_count;
     size_t element_size;
-    size_t initial_alloced_count;
+    size_t min_count;
     void* data;
 };
-
-/* Resizes Vector <vector> by performing alloc/realloc. Call to this function extends memory by <_resize_count> * <vector>->_element_size.
- * Return value:
- * on success: address of <vector>->data.
- * on failure: NULL. */
-void* _vec_alloc_new_chunk(struct Vector* vector, size_t _resize_count);
-
-/* Calls _alloc_new_chunk() with parameters (<vector>, <vector>->_resize_count).
- * Return value: Same as _alloc_new_chunk(). */
-void* _vec_alloc_new_chunk_rsz(struct Vector* vector);
 
 /* Calculates position of element with starting address <start_addr> in Vector <vector>.
  * Return value: Index of calculated position. */
@@ -42,17 +35,24 @@ int _vec_shift_right(struct Vector* vector, size_t start_idx);
  * on failure: 1 - memmove() failed. */
 int _vec_shift_left(struct Vector* vector, size_t start_idx);
 
-/* Calculates if it is possible to shrink Vector <vector> by at least <vector>->resize_count. Performs the shrinking if possible.
+/* Gets count of chunks for given <count>, <min_count> and <chunk_count> parameters. For example:
+ * For a vector with: 624 elements, min_count = 20, chunk_count = 100, the return value will be equal to 7 because 7 chunks of
+ * 100 elements are required to store the whole vector.
+ * Return value: count of chunks needed to store vector with given parameters. */
+int _vec_get_count_of_chunks(ssize_t count, ssize_t min_count, ssize_t chunk_count);
+
+/* Checks if vector <vector> needs to be resized to accomodate the new count of <vector>'s elements. New count is calculated with:
+ * old_count + count_diff. If needed, performs a realloc() call for <vector>'s data.
  * Return value:
- * on success: 0(shrinking was not performed), 1(shrinking was successfully perfmormed)
- * on failure: 2(shrinking was possible but failed - realloc() failed) */
-int _vec_shrink_if_possible(struct Vector* vector);
+ * on success: 0
+ * on failure: 1 - realloc() failed. */
+int _vec_resize_if_needed(struct Vector* vector, int count_diff);
 
 // --------------------------------------------------------------------------------------------
 
-struct Vector* vec_init(size_t initial_alloced_count, size_t resize_count, size_t element_size)
+struct Vector* vec_init(size_t min_count, size_t chunk_count, size_t element_size)
 {
-    assert(resize_count != 0);
+    assert(chunk_count != 0);
     assert(element_size != 0);
 
     struct Vector* vector = (struct Vector*)malloc(sizeof(struct Vector));
@@ -60,14 +60,13 @@ struct Vector* vec_init(size_t initial_alloced_count, size_t resize_count, size_
     if(vector == NULL) return NULL;
 
     vector->element_size = element_size;
-    vector->resize_count = resize_count;
-    vector->initial_alloced_count = initial_alloced_count;
-
-    vector->data = NULL;
+    vector->chunk_count = chunk_count;
+    vector->min_count = min_count;
     vector->count = 0;
-    vector->alloced_count = 0;
+    vector->alloced_count = min_count;
+    vector->data = malloc(element_size * min_count);
 
-    if (_vec_alloc_new_chunk(vector, initial_alloced_count) == NULL) return NULL;
+    if(vector->data == NULL) return NULL;
 
     return vector;
 }
@@ -77,7 +76,13 @@ void vec_destruct(struct Vector* vector)
     assert(vector != NULL);
 
     free(vector->data);
-    free(vector);
+
+    vector->count = 0;
+    vector->alloced_count = 0;
+    vector->element_size = 0;
+    vector->min_count = 0;
+    vector->chunk_count = 0;
+    vector->data = NULL;
 }
 
 int vec_assign(struct Vector* vector, const void* data, size_t pos)
@@ -104,8 +109,7 @@ int vec_insert(struct Vector* vector, const void* data, size_t pos)
     assert(pos <= vector->count);
     assert(data != NULL);
 
-    if(vector->count == vector->alloced_count)
-        if (_vec_alloc_new_chunk_rsz(vector) == NULL) return 1;
+    if (_vec_resize_if_needed(vector, 1) != 0) return 1;
 
     if(pos < vector->count)
         if(_vec_shift_right(vector, pos) != 0) return 3;
@@ -138,7 +142,7 @@ int vec_remove(struct Vector* vector, size_t pos)
 
    vector->count--;
 
-   int shrink_status = _vec_shrink_if_possible(vector); 
+   int shrink_status = _vec_resize_if_needed(vector, -1); 
    if((shrink_status != 0) && (shrink_status != 1)) return 2;
 
    return 0;
@@ -153,7 +157,7 @@ void* vec_at(const struct Vector* vector, size_t pos)
 {
     assert(vector != NULL);
     assert(vector->data != NULL);
-    assert(pos < vector->count);
+    assert(vector->count > pos);
 
     return _vec_get_element_addr(vector, pos);
 }
@@ -169,14 +173,14 @@ size_t vec_get_resize_count(const struct Vector* vector)
 {
     assert(vector != NULL);
 
-    return vector->resize_count;
+    return vector->chunk_count;
 }
 
-void vec_set_resize_count(struct Vector* vector, size_t resize_count)
+void vec_set_resize_count(struct Vector* vector, size_t chunk_count)
 {
     assert(vector != NULL);
 
-    vector->resize_count = resize_count;
+    vector->chunk_count = chunk_count;
 }
 
 void* vec_get_data(const struct Vector* vector)
@@ -214,7 +218,7 @@ void* _vec_alloc_new_chunk(struct Vector* vector, size_t _resize_count)
 
 void* _vec_alloc_new_chunk_rsz(struct Vector* vector)
 {
-    return _vec_alloc_new_chunk(vector, vector->resize_count);
+    return _vec_alloc_new_chunk(vector, vector->chunk_count);
 }
 
 size_t _vec_get_element_idx(struct Vector* vector, void* start_addr)
@@ -274,25 +278,29 @@ int _vec_shift_left(struct Vector* vector, size_t start_idx)
     return (memmove(start_pos, start_pos + step, step * elements_shifted) == NULL);
 }
 
-int _vec_shrink_if_possible(struct Vector* vector)
+int _vec_get_count_of_chunks(ssize_t count, ssize_t min_count, ssize_t chunk_count)
+{
+    return misc_max(0, (count - min_count) / chunk_count + ((count - min_count) % chunk_count > 0));
+}
+
+int _vec_resize_if_needed(struct Vector* vector, int count_diff)
 {
     assert(vector != NULL);
 
-    size_t count = vector->count;
-    size_t alloced_count = vector->alloced_count;
-    size_t resize_count = vector->resize_count;
-    size_t element_size = vector->element_size;
-    size_t initial_count = vector->initial_alloced_count;
+    ssize_t count = vector->count;
+    ssize_t alloced_count = vector->alloced_count;
+    ssize_t chunk_count = vector->chunk_count;
+    ssize_t element_size = vector->element_size;
+    ssize_t min_count = vector->min_count;
 
-    size_t chunks_required = (count - initial_count) / resize_count + ((count - initial_count) % resize_count > 0);
-    size_t chunks_alloced = (alloced_count - initial_count) / resize_count + ((alloced_count - initial_count) % resize_count > 0);
+    ssize_t chunks_required = _vec_get_count_of_chunks(count + count_diff, min_count, chunk_count);
+    ssize_t chunks_alloced = _vec_get_count_of_chunks(alloced_count, min_count, chunk_count);
 
-    if(chunks_required < chunks_alloced)
+    if(chunks_required != chunks_alloced)
     {
-        vector->data = realloc(vector->data, initial_count * element_size + chunks_required * resize_count * element_size);
-        vector->alloced_count = initial_count + chunks_required * resize_count;
-        if(vector->data == NULL) return 2;
-        else return 1;
+        vector->data = realloc(vector->data, min_count * element_size + chunks_required * chunk_count * element_size);
+        if(vector->data == NULL) return 1;
+        vector->alloced_count = min_count + chunks_required * chunk_count;
     }
     return 0;
 }

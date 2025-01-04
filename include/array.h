@@ -7,29 +7,16 @@
 * size_t count - current count of elements
 * size_t max_count - array capacity
 * size_t element_size - size of each element
-* int data_alloc_type - array alloc type(each array may be allocated statically or dynamically)
 * void* data - address of array beginning */
 struct Array;
 
-#define ALLOC_TYPE_UNALLOCED 0
-#define ALLOC_TYPE_STATIC 1
-#define ALLOC_TYPE_DYNAMIC 2
-
-/* Dynamically allocates memory for struct Array and initializes it: 
- * struct Array will have max_count = <max_count> elements, each the size of <element_size>. <array>'s array field will point to the provided statically allocated array <static_arr_ptr>.
+/* Dynamically allocates memory for struct Array and initializes it. Dynamically allocates <max_count> * <element_size> for <array>->data.
  * Return value:
- * on success - address of dynamically allocated struct Array 
- * on failure - NULL - failure to malloc() for struct Array */
-struct Array* arr_init_static(size_t max_count, size_t element_size, void* static_arr_ptr);
+ * on success - address of dynamically allocated struct Array. 
+ * on failure - NULL - malloc() failed. */
+struct Array* arr_init(size_t max_count, size_t element_size);
 
-/* Dynamically allocates memory for struct Array and initializes it: 
- * struct Array will have max_count = <max_count> elements, each the size of <element_size>. <array>'s array field will point to a dynamically allocated chunk of memory of adequate size.
- * Return value:
- * on success - address of dynamically allocated struct Array 
- * on failure - NULL - failure to malloc() for struct Array or malloc for <array>->data */
-struct Array* arr_init_dynamic(size_t max_count, size_t element_size);
-
-/* Frees dynamically allocated memory for <data> if needed. Frees dynamically allocated memory for <array>. */
+/* Frees dynamically allocated memory for <data>. Sets values of <array>'s fields to default values. */
 void arr_destruct(struct Array* array);
 
 /* Copies memory content pointed to by <data> into the Array <array> at index <pos>. <pos> <= <array>.count, otherwise the program will terminate. Keep in mind that while
