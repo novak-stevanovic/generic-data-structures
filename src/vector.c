@@ -5,6 +5,8 @@
 #include "assert.h"
 #include "misc.h"
 
+#define _VEC_INTERNAL_ERR_BASE (VEC_ERR_BASE + 500)
+
 struct Vector
 {
     size_t count;
@@ -15,42 +17,46 @@ struct Vector
     void* data;
 };
 
-// -------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
 
-#define _VEC_SHIFT_R_ERR_BASE 1000
+#define _VEC_SHIFT_R_ERR_BASE (_VEC_INTERNAL_ERR_BASE + 10)
 #define _VEC_SHIFT_R_ERR_VEC_NULL (_VEC_SHIFT_R_ERR_BASE + 1)
 #define _VEC_SHIFT_R_ERR_START_IDX_OUT_OF_BOUNDS (_VEC_SHIFT_R_ERR_BASE + 2)
 #define _VEC_SHIFT_R_ERR_INSUFF_SPACE (_VEC_SHIFT_R_ERR_BASE + 3) // Happens when vector->count == vector->alloced_count. This means there is not enough memory alloced to shift any elements rightwards.
+#define _VEC_SHIFT_R_ERR_INVALID_ADDR (_VEC_SHIFT_R_ERR_BASE + 4) // vec_at() returned null.
 
-/* Shift elements right of index <start_idx> rightward by calling memmove(). This function cannot expand the vector if there is not enough memory allocated. Make sure that
+/* Shift elements right of index(including) start_idx rightward by calling memmove(). This function cannot expand the vector if there is not enough memory allocated. Make sure that
  * vector->count < vector->alloced_count before calling.
  * Return value:
  * on success: 0
  * on failure: one of the error codes above. */
 static int _vec_shift_right(struct Vector* vector, size_t start_idx);
 
-// -------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
 
-#define _VEC_SHIFT_L_ERR_BASE 1100
+#define _VEC_SHIFT_L_ERR_BASE (_VEC_INTERNAL_ERR_BASE + 20)
 #define _VEC_SHIFT_L_ERR_VEC_NULL (_VEC_SHIFT_L_ERR_BASE + 1)
 #define _VEC_SHIFT_L_ERR_START_IDX_OUT_OF_BOUNDS (_VEC_SHIFT_L_ERR_BASE + 2)
+#define _VEC_SHIFT_L_ERR_INVALID_ADDR (_VEC_SHIFT_R_ERR_BASE + 4) // vec_at() returned null.
 
-/* Shift elements right of index <start_idx> leftward by calling memmove().
+/* Shift elements right of index(including) start_idx leftward by calling memmove().
  * Return value:
  * on success: 0
  * on failure: one of the error codes above. */
 static int _vec_shift_left(struct Vector* vector, size_t start_idx);
 
-// -------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
 
-/* Gets count of chunks for given <count>, <min_count> and <chunk_count> parameters. For example:
+/* Gets count of chunks for given count, min_count and chunk_count parameters. For example:
  * For a vector with: 624 elements, min_count = 20, chunk_count = 100, the return value will be equal to 7 because 7 chunks of
  * 100 elements are required to store the whole vector. For the same vector with 601 elements, 6 chunks would suffice(600 + 20 > 601).
  * This function can be considered static in the object-oriented sense, as it is not tied to a particular vector.
  * Return value: count of chunks needed to store vector with given parameters. */
 static size_t _vec_get_count_of_chunks(ssize_t count, ssize_t min_count, ssize_t chunk_count);
 
-// -------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
 
 /* Checks if vector has allocated more/less memory for its data than it needs based on the vector's current count, alloced_count, chunk_count, min_count and count_diff parameter,
  * where: count_diff = vector->count + count_diff. It uses the out_chunks_required parameter as an extra return value.
@@ -59,7 +65,7 @@ static size_t _vec_get_count_of_chunks(ssize_t count, ssize_t min_count, ssize_t
  * 0: vector resizing is not needed - out_chunks_required = -1. */
 static int _vec_is_resizing_needed(struct Vector* vector, ssize_t count_diff, size_t* out_chunks_required);
 
-// -------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
 
 /* Resizes vector by reallocating vector->data for (chunks_required * chunk_count * element_size + min_count * element_size) bytes of memory. 
  * This is in order to store the min_count of elements + the chunks needed to store the extra elements. This function does not check whether reallocating should happen, nor does
@@ -70,9 +76,9 @@ static int _vec_is_resizing_needed(struct Vector* vector, ssize_t count_diff, si
  * on failure: 1 - realloc() failed. */
 static int _vec_resize(struct Vector* vector, size_t chunks_required);
 
-// -------------------------------------------------------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
 
 struct Vector* vec_init(size_t min_count, size_t chunk_count, size_t element_size)
 {
@@ -85,7 +91,6 @@ struct Vector* vec_init(size_t min_count, size_t chunk_count, size_t element_siz
     vector->data = malloc(element_size * min_count);
 
     if(vector->data == NULL) {
-        vec_destruct(vector);
         free(vector);
         return NULL;
     }
@@ -142,10 +147,14 @@ int vec_insert(struct Vector* vector, const void* data, size_t pos)
     if(pos < vector->count)
         if(_vec_shift_right(vector, pos) != 0) return VEC_INSERT_ERR_SHIFTING_OP_FAILED;
     
-    vector->count++;
+    vector->count++; // it is important to increase the count first, so that the vec_assign() function will work.
 
-    int assign_status = vec_assign(vector, data, pos);
-    if(assign_status != 0) return VEC_INSERT_ERR_ASSIGN_OP_FAILED;
+    int assign_op_status = vec_assign(vector, data, pos);
+    if(assign_op_status != 0) 
+    {
+        vector->count--;
+        return VEC_INSERT_ERR_ASSIGN_OP_FAILED;
+    }
 
     return 0;
 
@@ -185,6 +194,9 @@ int vec_remove(struct Vector* vector, size_t pos)
 
 int vec_pop(struct Vector* vector)
 {
+    if(vector == NULL) return VEC_POP_ERR_NULL_VEC;
+    if(vector->count == 0) return VEC_POP_ERR_VEC_EMPTY;
+
     int remove_op_status =  vec_remove(vector, vector->count - 1);
     if(remove_op_status != 0)
         return remove_op_status - VEC_REMOVE_ERR_BASE + VEC_POP_ERR_BASE; // convert to pop error code
@@ -233,14 +245,14 @@ size_t vec_get_struct_size()
     return sizeof(struct Vector);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
 
 static int _vec_shift_right(struct Vector* vector, size_t start_idx)
 {
     if(vector == NULL) return _VEC_SHIFT_R_ERR_VEC_NULL;
-    if(start_idx >= vector->count) _VEC_SHIFT_R_ERR_START_IDX_OUT_OF_BOUNDS;
+    if(start_idx >= vector->count) return _VEC_SHIFT_R_ERR_START_IDX_OUT_OF_BOUNDS;
 
     size_t vector_count = vector->count;
 
@@ -250,6 +262,7 @@ static int _vec_shift_right(struct Vector* vector, size_t start_idx)
     size_t elements_shifted = vector_count - start_idx;
 
     void* start_pos = vec_at(vector, start_idx);
+    if(start_pos == NULL) return _VEC_SHIFT_R_ERR_INVALID_ADDR;
 
     memmove(start_pos + step, start_pos, step * elements_shifted);
 
@@ -262,12 +275,13 @@ static int _vec_shift_left(struct Vector* vector, size_t start_idx)
 
     size_t vector_count = vector->count;
 
-    if(start_idx >= vector->count) _VEC_SHIFT_L_ERR_START_IDX_OUT_OF_BOUNDS;
+    if(start_idx >= vector->count) return _VEC_SHIFT_L_ERR_START_IDX_OUT_OF_BOUNDS;
 
     size_t step = vector->element_size;
     size_t elements_shifted = vector_count - start_idx;
 
     void* start_pos = vec_at(vector, start_idx) - step;
+    if(start_pos == NULL) return _VEC_SHIFT_L_ERR_INVALID_ADDR;
 
     memmove(start_pos, start_pos + step, step * elements_shifted);
     return 0;
