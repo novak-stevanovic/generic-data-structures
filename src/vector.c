@@ -39,7 +39,7 @@ static int _vec_shift_right(struct Vector* vector, size_t start_idx);
 #define _VEC_SHIFT_L_ERR_BASE (_VEC_INTERNAL_ERR_BASE + 20)
 #define _VEC_SHIFT_L_ERR_VEC_NULL (_VEC_SHIFT_L_ERR_BASE + 1)
 #define _VEC_SHIFT_L_ERR_START_IDX_OUT_OF_BOUNDS (_VEC_SHIFT_L_ERR_BASE + 2)
-#define _VEC_SHIFT_L_ERR_INVALID_ADDR (_VEC_SHIFT_R_ERR_BASE + 4) // vec_at() returned null.
+#define _VEC_SHIFT_L_ERR_INVALID_ADDR (_VEC_SHIFT_L_ERR_BASE + 4) // vec_at() returned null.
 
 /* Shift elements right of index(including) start_idx leftward by calling memmove().
  * Return value:
