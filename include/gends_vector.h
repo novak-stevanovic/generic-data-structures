@@ -124,6 +124,14 @@ int vec_pop(struct Vector* vector);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
+/* Empties the vector.
+ * Return value:
+ * on success: 0,
+ * on failure: 1 - argument 'vector' is null, 2 - internal function _vec_resize() failed. */
+int vec_empty(struct Vector* vector);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
 /* Returns current count of elements in vector.
  * Return value:
  * on success: count of elements in vector. 

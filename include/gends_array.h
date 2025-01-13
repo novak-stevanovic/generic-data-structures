@@ -104,6 +104,14 @@ int arr_pop(struct Array* array);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
+/* Empties the array.
+ * Return value:
+ * on success: 0,
+ * on failure: 1 - argument 'array' is null. */
+int arr_empty(struct Array* array);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
 #define ARR_REALLOC_ERR_BASE (ARR_ERR_BASE + 60)
 #define ARR_REALLOC_ERR_ARR_NULL (ARR_REALLOC_ERR_BASE + 1)
 #define ARR_REALLOC_ERR_NEW_COUNT_EQ_ZERO (ARR_REALLOC_ERR_BASE + 2)

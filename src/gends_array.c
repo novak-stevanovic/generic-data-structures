@@ -165,6 +165,14 @@ int arr_pop(struct Array* array)
         return 0;
 }
 
+int arr_empty(struct Array* array)
+{
+    if(array == NULL) return 1;
+
+    array->count = 0;
+    return 0;
+}
+
 int arr_realloc(struct Array* array, size_t new_max_count)
 {
     if(array == NULL) return ARR_REALLOC_ERR_ARR_NULL;

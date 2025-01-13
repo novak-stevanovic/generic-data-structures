@@ -204,6 +204,18 @@ int vec_pop(struct Vector* vector)
         return 0;
 }
 
+int vec_empty(struct Vector* vector)
+{
+    if(vector == NULL) return 1;
+
+    int resize_status =_vec_resize(vector, 0);
+    if(resize_status != 0) return 2;
+
+    vector->count = 0;
+    return 0;
+
+}
+
 void* vec_at(const struct Vector* vector, size_t pos)
 {
     if(vector == NULL) return NULL;
