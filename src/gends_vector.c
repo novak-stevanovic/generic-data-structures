@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
-#include "vector.h"
-#include "assert.h"
-#include "misc.h"
+#include "gends_vector.h"
+#include "gends_misc.h"
 
 #define _VEC_INTERNAL_ERR_BASE (VEC_ERR_BASE + 500)
 
@@ -289,7 +289,7 @@ static int _vec_shift_left(struct Vector* vector, size_t start_idx)
 
 static size_t _vec_get_count_of_chunks(ssize_t count, ssize_t min_count, ssize_t chunk_count)
 {
-    return misc_max(0, (count - min_count) / chunk_count + ((count - min_count) % chunk_count > 0));
+    return gends_misc_max(0, (count - min_count) / chunk_count + ((count - min_count) % chunk_count > 0));
 }
 
 static int _vec_is_resizing_needed(struct Vector* vector, ssize_t count_diff, size_t* out_chunks_required)

@@ -1,9 +1,9 @@
 #include <stddef.h>
 #include <string.h>
+#include <assert.h>
 
-#include "array.h"
-#include "assert.h"
-#include "misc.h"
+#include "gends_array.h"
+#include "gends_misc.h"
 
 #define _ARR_INTERNAL_ERR_BASE (ARR_ERR_BASE + 500)
 
@@ -174,7 +174,7 @@ int arr_realloc(struct Array* array, size_t new_max_count)
     if(array->data == NULL) return ARR_REALLOC_ERR_REALLOC_FAIL;
 
     array->max_count = new_max_count;
-    array->count = misc_min(array->count, array->max_count);
+    array->count = gends_misc_min(array->count, array->max_count);
 
     return 0;
 }

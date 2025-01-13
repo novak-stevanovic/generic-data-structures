@@ -1,5 +1,5 @@
-#ifndef ARRAY_H
-#define ARRAY_H
+#ifndef GENDS_ARRAY_H
+#define GENDS_ARRAY_H
 
 #include <stdlib.h>
 
