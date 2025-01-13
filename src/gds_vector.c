@@ -60,12 +60,12 @@ static size_t _gds_vec_get_count_of_chunks(ssize_t count, ssize_t min_count, ssi
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 /* Checks if vector has allocated more/less memory for its data than it needs based on the vector's:
- * current count, alloced_count, count_in_chunk, min_count and count_diff parameter, where: count_diff = vector->count + count_diff.
+ * current count, alloced_count, count_in_chunk, min_count and new_count parameter, where: new_count is the new count of elements
  * It uses the out_chunks_required parameter as an extra return value.
  * Return value:
  * 1: vector resizing is needed - out_chunks_required will be set to the count of required chunks of memory needed to store vector->data.
- * 0: vector resizing is not needed - out_chunks_required = -1. */
-static int _gds_vec_is_resizing_needed(struct GDSVector* vector, ssize_t count_diff, size_t* out_chunks_required);
+ * 0: vector resizing is not needed - out_chunks_required = 0. */
+static int _gds_vec_is_resizing_needed(struct GDSVector* vector, size_t new_count, size_t* out_chunks_required);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -79,10 +79,22 @@ static int _gds_vec_is_resizing_needed(struct GDSVector* vector, ssize_t count_d
 static int _gds_vec_resize(struct GDSVector* vector, size_t chunks_required);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
+/* Function that performs work that functions: 1. gds_vec_set_size_val(...) and gds_vec_set_size_func(...) share:
+ * 1. The function checks if resizing is needed for parameter new_count and saves the chunk required value.
+ * 2. The function performs resizing of the vector's data according to chunks_required count.
+ * 3. Adjusts the vector's count. 
+ * Return value:
+ * on success: 0,
+ * on failure: 
+ * 1 - parameter vector is NULL,
+ * 2 - resizing failed(call to _gds_vec_resize()) */
+static int _gds_vec_set_size_shared(struct GDSVector* vector, size_t new_size);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-struct GDSVector* gds_vec_init(size_t min_count, size_t count_in_chunk, size_t element_size)
+struct GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t element_size)
 {
     if((count_in_chunk == 0) || (element_size == 0)) return NULL;
 
@@ -137,10 +149,12 @@ int gds_vec_insert(struct GDSVector* vector, const void* data, size_t pos)
 {
     if(vector == NULL) return VEC_INSERT_ERR_NULL_VEC;
     if(data == NULL) return VEC_INSERT_ERR_NULL_DATA;
-    if(pos > vector->count) return VEC_INSERT_ERR_POS_OUT_OF_BOUNDS;
+
+    size_t vector_count = vector->count;
+    if(pos > vector_count) return VEC_INSERT_ERR_POS_OUT_OF_BOUNDS;
 
     size_t chunks_required;
-    if(_gds_vec_is_resizing_needed(vector, pos, &chunks_required)) 
+    if(_gds_vec_is_resizing_needed(vector, vector_count + 1, &chunks_required)) 
     {
         int resize_op_status = _gds_vec_resize(vector, chunks_required);
         if(resize_op_status != 0) return VEC_INSERT_ERR_RESIZE_OP_FAILED;
@@ -149,7 +163,7 @@ int gds_vec_insert(struct GDSVector* vector, const void* data, size_t pos)
     if(pos < vector->count)
         if(_gds_vec_shift_right(vector, pos) != 0) return VEC_INSERT_ERR_SHIFTING_OP_FAILED;
     
-    vector->count++; // it is important to increase the count first, so that the vec_assign() function will work.
+    vector->count++; // it is important to increase the count first, so that the gds_vec_assign() function will work.
 
     int assign_op_status = gds_vec_assign(vector, data, pos);
     if(assign_op_status != 0) 
@@ -185,7 +199,7 @@ int gds_vec_remove(struct GDSVector* vector, size_t pos)
    vector->count--;
 
    size_t chunks_required;
-   if(_gds_vec_is_resizing_needed(vector, -1, &chunks_required))
+   if(_gds_vec_is_resizing_needed(vector, vector->count -1, &chunks_required))
    {
        int resize_op_status = _gds_vec_resize(vector, chunks_required);
        if(resize_op_status != 0) return VEC_REMOVE_ERR_RESIZE_OP_FAILED;
@@ -199,11 +213,79 @@ int gds_vec_pop(struct GDSVector* vector)
     if(vector == NULL) return VEC_POP_ERR_NULL_VEC;
     if(vector->count == 0) return VEC_POP_ERR_VEC_EMPTY;
 
-    int remove_op_status =  gds_vec_remove(vector, vector->count - 1);
+    int remove_op_status = gds_vec_remove(vector, vector->count - 1);
     if(remove_op_status != 0)
         return remove_op_status - VEC_REMOVE_ERR_BASE + VEC_POP_ERR_BASE; // convert to pop error code
     else
         return 0;
+}
+
+static int _gds_vec_set_size_shared(struct GDSVector* vector, size_t new_size)
+{
+    if(vector == NULL) return 1;
+
+    size_t chunks_required;
+    int resize_needed = _gds_vec_is_resizing_needed(vector, new_size, &chunks_required);
+
+    if(resize_needed)
+    {
+        int resize_status = _gds_vec_resize(vector, chunks_required);
+        if(resize_status != 0)
+            return 2;
+    }
+
+    vector->count = new_size;
+    return 0;
+}
+
+int gds_vec_set_size_val(struct GDSVector* vector, size_t new_size, void* default_val)
+{
+    if(vector == NULL) return VEC_SET_SIZE_VAL_NULL_VEC;
+
+    size_t old_size = vector->count;
+
+    int set_size_status = _gds_vec_set_size_shared(vector, new_size);
+    if(set_size_status != 0) return VEC_SET_SIZE_VAL_SHARED_FAIL;
+
+    if(old_size > new_size)
+    {
+        if(default_val == NULL) return VEC_SET_SIZE_VAL_NULL_DEFAULT_VAL;
+
+        int i;
+        int assign_status;
+        for(i = old_size; i < new_size; i++)
+        {
+            assign_status = gds_vec_assign(vector, default_val, i);
+            if(assign_status != 0) return VEC_SET_SIZE_VAL_ASSIGN_FAIL;
+        }
+    }
+
+    return 0;
+}
+
+int gds_vec_set_size_gen(struct GDSVector* vector, size_t new_size, void* (*el_gen_func)(void))
+{
+    if(vector == NULL) return VEC_SET_SIZE_GEN_NULL_VEC;
+
+    size_t old_size = vector->count;
+
+    int set_size_status = _gds_vec_set_size_shared(vector, new_size);
+    if(set_size_status != 0) return VEC_SET_SIZE_GEN_NULL_VEC;
+
+    if(old_size > new_size)
+    {
+        if(el_gen_func == NULL) return VEC_SET_SIZE_GEN_NULL_GEN_FUNC;
+
+        int i;
+        int assign_status;
+        for(i = old_size; i < new_size; i++)
+        {
+            assign_status = gds_vec_assign(vector, el_gen_func(), i);
+            if(assign_status != 0) return VEC_SET_SIZE_GEN_ASSIGN_FAIL;
+        }
+    }
+
+    return 0;
 }
 
 int gds_vec_empty(struct GDSVector* vector)
@@ -306,14 +388,14 @@ static size_t _gds_vec_get_count_of_chunks(ssize_t count, ssize_t min_count, ssi
     return gds_misc_max(0, (count - min_count) / count_in_chunk + ((count - min_count) % count_in_chunk > 0));
 }
 
-static int _gds_vec_is_resizing_needed(struct GDSVector* vector, ssize_t count_diff, size_t* out_chunks_required)
+static int _gds_vec_is_resizing_needed(struct GDSVector* vector, size_t new_count, size_t* out_chunks_required)
 {
     ssize_t count = vector->count;
     ssize_t alloced_count = vector->alloced_count;
     ssize_t count_in_chunk = vector->count_in_chunk;
     ssize_t min_count = vector->min_count;
 
-    ssize_t chunks_required = _gds_vec_get_count_of_chunks(count + count_diff, min_count, count_in_chunk);
+    ssize_t chunks_required = _gds_vec_get_count_of_chunks(new_count, min_count, count_in_chunk);
     ssize_t chunks_alloced = _gds_vec_get_count_of_chunks(alloced_count, min_count, count_in_chunk);
 
     if(chunks_required != chunks_alloced)

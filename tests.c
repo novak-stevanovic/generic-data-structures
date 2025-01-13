@@ -3,7 +3,7 @@
 
 int main(int argc, char *argv[])
 {
-    struct GDSVector* v = gds_vec_init(10, 15, sizeof(int));
+    struct GDSVector* v = gds_vec_create(10, 15, sizeof(int));
 
     int i = 10;
     gds_vec_append(v, &i);

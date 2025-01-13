@@ -14,7 +14,7 @@ void gds_dyn_matrix_init(struct GDSDynamicMatrix* dyn_matrix,
     dyn_matrix->_gen_row_func = gen_row_func;
     dyn_matrix->_gen_element_func = gen_element_func;
 
-    dyn_matrix->_rows = gds_vec_init(row_min_count, row_chunk_count, gds_vec_get_struct_size());
+    dyn_matrix->_rows = gds_vec_create(row_min_count, row_chunk_count, gds_vec_get_struct_size());
 }
 
 void gds_dyn_matrix_set_size(struct GDSDynamicMatrix* dyn_matrix, size_t height, size_t width)

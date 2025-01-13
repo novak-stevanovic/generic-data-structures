@@ -18,7 +18,7 @@ struct GDSArray;
  * Return value:
  * on success - address of dynamically allocated struct GDSArray. 
  * on failure - NULL: max_count or element_size equals 0 OR malloc() failed for struct GDSArray or array's data. */
-struct GDSArray* gds_arr_init(size_t max_count, size_t element_size);
+struct GDSArray* gds_arr_create(size_t max_count, size_t element_size);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 

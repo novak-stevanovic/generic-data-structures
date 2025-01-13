@@ -47,7 +47,7 @@ static int _gds_arr_shift_left(struct GDSArray* array, size_t start_idx);
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-struct GDSArray* gds_arr_init(size_t max_count, size_t element_size)
+struct GDSArray* gds_arr_create(size_t max_count, size_t element_size)
 {
     if((max_count == 0) || (element_size == 0)) return NULL;
 
