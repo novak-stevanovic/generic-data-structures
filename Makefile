@@ -6,7 +6,7 @@ INSTALL_PREFIX = /usr/local
 C_SRC = $(shell find src -name "*.c")
 C_OBJ = $(patsubst src/%.c,build/%.o,$(C_SRC))
 
-LIB = gends
+LIB = gds
 SO_LIB = lib$(LIB).so
 SO_FLAGS = -shared
 
