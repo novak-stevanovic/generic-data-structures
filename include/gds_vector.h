@@ -19,10 +19,11 @@ struct GDSVector;
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-/* Allocates memory for struct GDSVector vector, initializes struct fields. Allocates the memory for the first min_count elements of the array. 
+/* Allocates memory for struct GDSVector vector, initializes struct fields. Allocates the memory for the first min_count elements of the array.
+ * Keep in mind that: min_count, count_in_chunk and element_size parameters must all be greater than 0.
  * Return value:
  * on success: address of dynamically allocated struct GDSVector. 
- * on failure: NULL - count_in_chunk or element_size equal to 0 or malloc() failed for either struct GDSVector or vector data. */
+ * on failure: NULL - count_in_chunk, element_size or min_count equal to 0 or malloc() failed for either struct GDSVector or vector data. */
 struct GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t element_size);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -73,7 +74,7 @@ int gds_vec_assign(struct GDSVector* vector, const void* data, size_t pos);
 /* Inserts element pointed at by data at index pos in the vector. May result in resizing of vector. Performs a call to _gds_vec_shift_right() to 
  * make space for the new element at pos. Performs a call to gds_vec_assign() to assign value to position of new element.
  * Return value:
- * on success: 0
+ * on success: 0,
  * on failure: one of the error codes above. */
 int gds_vec_insert(struct GDSVector* vector, const void* data, size_t pos);
 
@@ -89,7 +90,7 @@ int gds_vec_insert(struct GDSVector* vector, const void* data, size_t pos);
 /* Appends data pointed at by data at the end of the vector. Calls gds_vec_insert() by specyfing pos as vector->count.
  * May result in resizing of vector.
  * Return value:
- * on success: 0
+ * on success: 0,
  * on failure: one of the error codes above. */
 int gds_vec_append(struct GDSVector* vector, const void* data);
 
@@ -104,7 +105,7 @@ int gds_vec_append(struct GDSVector* vector, const void* data);
 
 /* Removes element at index pos in vector. May result in resizing of vector. Function shifts the elements right of(including) pos leftwards by calling _gds_vec_shift_left().
  * Return value:
- * on success: 0
+ * on success: 0,
  * on failure: one of the error codes above. */
 int gds_vec_remove(struct GDSVector* vector, size_t pos);
 
@@ -118,7 +119,7 @@ int gds_vec_remove(struct GDSVector* vector, size_t pos);
 
 /* Removes last element of vector. May result in resizing of vector. Performs a call to gds_vec_remove(vector, vector->count - 1).
  * Return value:
- * on success: 0
+ * on success: 0,
  * on failure: one of the error codes above. */
 int gds_vec_pop(struct GDSVector* vector);
 
@@ -139,7 +140,10 @@ int gds_vec_pop(struct GDSVector* vector);
  * 3. equal to new_size - vector will remain unchanged.
  * Keep in mind that the performance of this function is much better than appending elements one by one to the end of the vector. This is only one realloc() will be
  * performed(if needed), as opposed to potentially more realloc() calls.
- * If the function is guaranteed to shrink the vector, argument default_val may be NULL. */
+ * If the function is guaranteed to shrink the vector, argument default_val may be NULL.
+ * Return value:
+ * on success: 0,
+ * on failure: one of the error codes above. */
 int gds_vec_set_size_val(struct GDSVector* vector, size_t new_size, void* default_val);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -156,12 +160,15 @@ int gds_vec_set_size_val(struct GDSVector* vector, size_t new_size, void* defaul
  * 1. greater than new_size - the vector will be shrank to the new size.
  * 2. lesser than new_size - vector will be expanded to the new size. This means that elements will be appended to the end of the vector until vector->count = new_count.
  * As opposed to gds_vec_set_size_val() func(which will append the same data n times),
- * this function will generate a new element and append it at the end(by calling the el_gen_func) n times. This may be useful in situations where elements of the vector
+ * This function will generate a new element and append it at the end(by calling the el_gen_func) n times. This may be useful in situations where elements of the vector
  * are complex and involve malloc() calls.
  * * 3. equal to new_size - vector will remain unchanged.
  * Keep in mind that the performance of this function is much better than appending elements one by one to the end of the vector. This is only one realloc() will be
  * performed(if needed), as opposed to potentially more realloc() calls.
- * If the function is guaranteed to shrink the vector, argument el_gen_func may be NULL. */
+ * If the function is guaranteed to shrink the vector, argument el_gen_func may be NULL. 
+ * Return value:
+ * on success: 0,
+ * on failure: one of the error codes above. */
 int gds_vec_set_size_gen(struct GDSVector* vector, size_t new_size, void* (*el_gen_func)(void));
 
 // --------------------------------------------------------------------------------------------------------------------------------------------

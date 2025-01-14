@@ -79,6 +79,7 @@ static int _gds_vec_is_resizing_needed(struct GDSVector* vector, size_t new_coun
 static int _gds_vec_resize(struct GDSVector* vector, size_t chunks_required);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
+
 /* Function that performs work that functions: 1. gds_vec_set_size_val(...) and gds_vec_set_size_func(...) share:
  * 1. The function checks if resizing is needed for parameter new_count and saves the chunk required value.
  * 2. The function performs resizing of the vector's data according to chunks_required count.
@@ -96,7 +97,7 @@ static int _gds_vec_set_size_shared(struct GDSVector* vector, size_t new_size);
 
 struct GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t element_size)
 {
-    if((count_in_chunk == 0) || (element_size == 0)) return NULL;
+    if((count_in_chunk == 0) || (element_size == 0) || (min_count == 0)) return NULL;
 
     struct GDSVector* vector = (struct GDSVector*)malloc(sizeof(struct GDSVector));
 
@@ -390,7 +391,6 @@ static size_t _gds_vec_get_count_of_chunks(ssize_t count, ssize_t min_count, ssi
 
 static int _gds_vec_is_resizing_needed(struct GDSVector* vector, size_t new_count, size_t* out_chunks_required)
 {
-    ssize_t count = vector->count;
     ssize_t alloced_count = vector->alloced_count;
     ssize_t count_in_chunk = vector->count_in_chunk;
     ssize_t min_count = vector->min_count;

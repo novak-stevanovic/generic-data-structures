@@ -104,6 +104,50 @@ int gds_arr_pop(struct GDSArray* array);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
+#define ARR_SET_SIZE_VAL_ERR_BASE (ARR_ERR_BASE + 70)
+
+#define ARR_SET_SIZE_VAL_NULL_ARR (ARR_SET_SIZE_VAL_ERR_BASE + 1) // argument array is NULL
+#define ARR_SET_SIZE_VAL_INVALID_NEW_COUNT_ARG (ARR_SET_SIZE_VAL_ERR_BASE + 3) // provided new_count argument is greater than the array's capacity
+#define ARR_SET_SIZE_VAL_NULL_DEFAULT_VAL (ARR_SET_SIZE_VAL_ERR_BASE + 3) // function needs to expand the array but provided default_val arg is NULL.
+#define ARR_SET_SIZE_VAL_ASSIGN_FAIL (ARR_SET_SIZE_VAL_ERR_BASE + 4) // expanding of array by repeated
+                                                                     // calling gds_arr_assign(struct GDSArray* array, size_t pos, const void* data) failed.
+
+/* Sets the count of elements of array to new_count. If the array's count is:
+ * 1. greater than new_size - the array will be shrank to the new size.
+ * 2. lesser than new_size - array will be expanded to the new size. This means that elements will be appended to the end of the array until array->count = new_count.
+ * Content of memory pointed at by default_val parameter will determine the value of these elements.
+ * 3. equal to new_size - array will remain unchanged.
+ * If the function is guaranteed to shrink the array, argument default_val may be NULL.
+ * Return value:
+ * on success: 0,
+ * on failure: one of the error codes above. */
+int gds_arr_set_size_val(struct GDSArray* array, size_t new_count, void* default_val);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
+#define ARR_SET_SIZE_GEN_ERR_BASE (ARR_ERR_BASE + 70)
+
+#define ARR_SET_SIZE_GEN_NULL_ARR (ARR_SET_SIZE_GEN_ERR_BASE + 1) // argument array is NULL
+#define ARR_SET_SIZE_GEN_INVALID_NEW_COUNT_ARG (ARR_SET_SIZE_GEN_ERR_BASE + 3) // provided new_count argument is greater than the array's capacity
+#define ARR_SET_SIZE_GEN_NULL_GEN_FUNC (ARR_SET_SIZE_GEN_ERR_BASE + 3) // function needs to expand the array but provided el_gen_func() arg is NULL.
+#define ARR_SET_SIZE_GEN_ASSIGN_FAIL (ARR_SET_SIZE_GEN_ERR_BASE + 4) // expanding of array by repeated
+                                                                     // calling gds_arr_assign(struct GDSArray* array, size_t pos, const void* data) failed.
+
+/* Sets the count of elements of array to new_count. If the array's count is:
+ * 1. greater than new_size - the array will be shrank to the new size.
+ * 2. lesser than new_size - array will be expanded to the new size. This means that elements will be appended to the end of the array until array->count = new_count.
+ * As opposed to gds_arr_set_size_val() func(which will append the same data n times),
+ * This function will generate a new element and append it at the end(by calling the el_gen_func) n times. This may be useful in situations where elements of the array
+ * are complex and involve malloc() calls.
+ * 3. equal to new_size - array will remain unchanged.
+ * If the function is guaranteed to shrink the array, argument default_val may be NULL.
+ * Return value:
+ * on success: 0,
+ * on failure: one of the error codes above. */
+int gds_arr_set_size_gen(struct GDSArray* array, size_t new_count, void* (*el_gen_func)(void));
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
 /* Empties the array.
  * Return value:
  * on success: 0,

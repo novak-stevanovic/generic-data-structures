@@ -165,6 +165,54 @@ int gds_arr_pop(struct GDSArray* array)
         return 0;
 }
 
+int gds_arr_set_size_val(struct GDSArray* array, size_t new_count, void* default_val)
+{
+    if(array == NULL) return ARR_SET_SIZE_VAL_NULL_ARR;
+    if(new_count > array->max_count) return ARR_SET_SIZE_VAL_INVALID_NEW_COUNT_ARG;
+    
+    size_t old_count = array->count;
+
+    if(old_count > new_count)
+        array->count = new_count;
+    else if(old_count < new_count)
+    {
+        if(default_val == NULL) return ARR_SET_SIZE_VAL_NULL_DEFAULT_VAL;
+
+        int i, assign_status;
+        for(i = old_count; i < new_count; i++)
+        {
+            assign_status = gds_arr_assign(array, old_count, default_val);
+            if(assign_status != 0) return ARR_SET_SIZE_VAL_ASSIGN_FAIL;
+        }
+    }
+
+    return 0;
+}
+
+int gds_arr_set_size_gen(struct GDSArray* array, size_t new_count, void* (*el_gen_func)(void))
+{
+    if(array == NULL) return ARR_SET_SIZE_GEN_NULL_ARR;
+    if(new_count > array->max_count) return ARR_SET_SIZE_GEN_INVALID_NEW_COUNT_ARG;
+    
+    size_t old_count = array->count;
+
+    if(old_count > new_count)
+        array->count = new_count;
+    else if(old_count < new_count)
+    {
+        if(el_gen_func == NULL) return ARR_SET_SIZE_GEN_NULL_GEN_FUNC;
+
+        int i, assign_status;
+        for(i = old_count; i < new_count; i++)
+        {
+            assign_status = gds_arr_assign(array, old_count, el_gen_func());
+            if(assign_status != 0) return ARR_SET_SIZE_GEN_ASSIGN_FAIL;
+        }
+    }
+
+    return 0;
+}
+
 int gds_arr_empty(struct GDSArray* array)
 {
     if(array == NULL) return 1;
