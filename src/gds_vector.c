@@ -272,7 +272,7 @@ int gds_vec_set_size_gen(struct GDSVector* vector, size_t new_size, void* (*el_g
     size_t old_size = vector->count;
 
     int set_size_status = _gds_vec_set_size_shared(vector, new_size);
-    if(set_size_status != 0) return VEC_SET_SIZE_GEN_NULL_VEC;
+    if(set_size_status != 0) return VEC_SET_SIZE_GEN_SHARED_FAIL;
 
     if(old_size > new_size)
     {
