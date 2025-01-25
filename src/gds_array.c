@@ -189,7 +189,7 @@ int gds_arr_set_size_val(struct GDSArray* array, size_t new_count, void* default
     return 0;
 }
 
-int gds_arr_set_size_gen(struct GDSArray* array, size_t new_count, void* (*el_gen_func)(void))
+int gds_arr_set_size_gen(struct GDSArray* array, size_t new_count, void* (*el_gen_func)(void* data), void* data)
 {
     if(array == NULL) return ARR_SET_SIZE_GEN_NULL_ARR;
     if(new_count > array->max_count) return ARR_SET_SIZE_GEN_INVALID_NEW_COUNT_ARG;
@@ -205,7 +205,7 @@ int gds_arr_set_size_gen(struct GDSArray* array, size_t new_count, void* (*el_ge
         int i, assign_status;
         for(i = old_count; i < new_count; i++)
         {
-            assign_status = gds_arr_assign(array, old_count, el_gen_func());
+            assign_status = gds_arr_assign(array, old_count, el_gen_func(data));
             if(assign_status != 0) return ARR_SET_SIZE_GEN_ASSIGN_FAIL;
         }
     }

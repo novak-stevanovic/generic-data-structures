@@ -138,13 +138,13 @@ int gds_arr_set_size_val(struct GDSArray* array, size_t new_count, void* default
  * 2. lesser than new_size - array will be expanded to the new size. This means that elements will be appended to the end of the array until array->count = new_count.
  * As opposed to gds_arr_set_size_val() func(which will append the same data n times),
  * This function will generate a new element and append it at the end(by calling the el_gen_func) n times. This may be useful in situations where elements of the array
- * are complex and involve malloc() calls.
+ * are complex and involve malloc() calls. The el_gen_func(void* data) must return a pointer to a dynamically alloced block of memory. The parameter may be used as the user likes.
  * 3. equal to new_size - array will remain unchanged.
  * If the function is guaranteed to shrink the array, argument default_val may be NULL.
  * Return value:
  * on success: 0,
  * on failure: one of the error codes above. */
-int gds_arr_set_size_gen(struct GDSArray* array, size_t new_count, void* (*el_gen_func)(void));
+int gds_arr_set_size_gen(struct GDSArray* array, size_t new_count, void* (*el_gen_func)(void* data), void* data);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 

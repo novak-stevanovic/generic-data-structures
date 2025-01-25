@@ -105,7 +105,8 @@ struct GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t
 
     vector->data = malloc(element_size * min_count);
 
-    if(vector->data == NULL) {
+    if(vector->data == NULL)
+    {
         free(vector);
         return NULL;
     }
@@ -191,22 +192,22 @@ int gds_vec_remove(struct GDSVector* vector, size_t pos)
     if(vector == NULL) return VEC_REMOVE_ERR_NULL_VEC;
     if(pos >= vector->count) return VEC_REMOVE_ERR_POS_OUT_OF_BOUNDS;
 
-   if(pos < (vector->count - 1))
-   {
-       int shift_op_status = _gds_vec_shift_left(vector, pos + 1);
-       if(shift_op_status != 0) return VEC_REMOVE_ERR_SHIFTING_OP_FAILED;
-   }
+    if(pos < (vector->count - 1))
+    {
+        int shift_op_status = _gds_vec_shift_left(vector, pos + 1);
+        if(shift_op_status != 0) return VEC_REMOVE_ERR_SHIFTING_OP_FAILED;
+    }
 
-   vector->count--;
+    vector->count--;
 
-   size_t chunks_required;
-   if(_gds_vec_is_resizing_needed(vector, vector->count -1, &chunks_required))
-   {
-       int resize_op_status = _gds_vec_resize(vector, chunks_required);
-       if(resize_op_status != 0) return VEC_REMOVE_ERR_RESIZE_OP_FAILED;
-   }
+    size_t chunks_required;
+    if(_gds_vec_is_resizing_needed(vector, vector->count -1, &chunks_required))
+    {
+        int resize_op_status = _gds_vec_resize(vector, chunks_required);
+        if(resize_op_status != 0) return VEC_REMOVE_ERR_RESIZE_OP_FAILED;
+    }
 
-   return 0;
+    return 0;
 }
 
 int gds_vec_pop(struct GDSVector* vector)
@@ -264,7 +265,7 @@ int gds_vec_set_size_val(struct GDSVector* vector, size_t new_size, void* defaul
     return 0;
 }
 
-int gds_vec_set_size_gen(struct GDSVector* vector, size_t new_size, void* (*el_gen_func)(void))
+int gds_vec_set_size_gen(struct GDSVector* vector, size_t new_size, void* (*el_gen_func)(void* data), void* data)
 {
     if(vector == NULL) return VEC_SET_SIZE_GEN_NULL_VEC;
 
@@ -281,7 +282,7 @@ int gds_vec_set_size_gen(struct GDSVector* vector, size_t new_size, void* (*el_g
         int assign_status;
         for(i = old_size; i < new_size; i++)
         {
-            assign_status = gds_vec_assign(vector, el_gen_func(), i);
+            assign_status = gds_vec_assign(vector, el_gen_func(data), i);
             if(assign_status != 0) return VEC_SET_SIZE_GEN_ASSIGN_FAIL;
         }
     }
