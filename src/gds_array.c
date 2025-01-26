@@ -13,6 +13,7 @@ struct GDSArray
     size_t max_count;
     size_t element_size;
     void* data;
+    void (*on_element_removal_func)(void*);
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,10 +45,30 @@ static int _gds_arr_shift_right(struct GDSArray* array, size_t start_idx);
 static int _gds_arr_shift_left(struct GDSArray* array, size_t start_idx);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
+
+/* Invokes array->on_element_removal_func(data) if the field is non-NULL. */
+static void _gds_arr_on_element_removal(struct GDSArray* array, void* data);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
+/* Invokes _gds_arr_on_element_removal(struct GDSArray* array, void* data) for each element starting from start_pos(including)
+ * , ending at end_pos (excluding). If start_pos == end_pos, no calls will be performed.
+ * Return value:
+ * on success: 0,
+ * on failure: 
+ * 1 - argument array is NULL, 
+ * 2 - start_pos > end_pos, 
+ * 3 - array->count = 0,
+ * 4. start_pos > array->count - 1, 
+ * 5. end_pos > array->count
+ * 6. gds_arr_at() returned NULL. */
+static int _gds_arr_on_element_removal_batch(struct GDSArray* array, size_t start_pos, size_t end_pos);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-struct GDSArray* gds_arr_create(size_t max_count, size_t element_size)
+struct GDSArray* gds_arr_create(size_t max_count, size_t element_size, void (*on_element_removal_func)(void*))
 {
     if((max_count == 0) || (element_size == 0)) return NULL;
 
@@ -55,6 +76,7 @@ struct GDSArray* gds_arr_create(size_t max_count, size_t element_size)
 
     array->max_count = max_count;
     array->element_size = element_size;
+    array->on_element_removal_func = on_element_removal_func;
     array->count = 0;
 
     if(array == NULL) return NULL;
@@ -73,6 +95,8 @@ struct GDSArray* gds_arr_create(size_t max_count, size_t element_size)
 void gds_arr_destruct(struct GDSArray* array)
 {
     if(array == NULL) return;
+
+    gds_arr_empty(array);
 
     free(array->data);
     array->count = 0;
@@ -142,6 +166,10 @@ int gds_arr_remove(struct GDSArray* array, size_t pos)
     if(array == NULL) return ARR_REMOVE_ERR_ARR_NULL;
     if(pos >= array->count) return ARR_REMOVE_ERR_POS_OUT_OF_BOUNDS;
 
+    void* element_addr = gds_arr_at(array, pos);
+    if(element_addr == NULL) return ARR_REMOVE_ERR_AT_FAIL;
+    _gds_arr_on_element_removal(array, element_addr);
+
     if(pos < (array->count - 1))
     {
         int shift_status = _gds_arr_shift_left(array, pos + 1);
@@ -173,7 +201,11 @@ int gds_arr_set_size_val(struct GDSArray* array, size_t new_count, void* default
     size_t old_count = array->count;
 
     if(old_count > new_count)
+    {
+        int batch_removal_status = _gds_arr_on_element_removal_batch(array, new_count, old_count);
+        if(batch_removal_status != 0) return ARR_SET_SIZE_VAL_ON_BATCH_REMOVAL_FAIL;
         array->count = new_count;
+    }
     else if(old_count < new_count)
     {
         if(default_val == NULL) return ARR_SET_SIZE_VAL_NULL_DEFAULT_VAL;
@@ -197,7 +229,11 @@ int gds_arr_set_size_gen(struct GDSArray* array, size_t new_count, void* (*el_ge
     size_t old_count = array->count;
 
     if(old_count > new_count)
+    {
+        int batch_removal_status = _gds_arr_on_element_removal_batch(array, new_count, old_count);
+        if(batch_removal_status != 0) return ARR_SET_SIZE_GEN_ON_BATCH_REMOVAL_FAIL;
         array->count = new_count;
+    }
     else if(old_count < new_count)
     {
         if(el_gen_func == NULL) return ARR_SET_SIZE_GEN_NULL_GEN_FUNC;
@@ -217,7 +253,9 @@ int gds_arr_empty(struct GDSArray* array)
 {
     if(array == NULL) return 1;
 
-    array->count = 0;
+    int set_size_status = gds_arr_set_size_val(array, 0, NULL);
+    if(set_size_status != 0) return 2;
+
     return 0;
 }
 
@@ -297,3 +335,33 @@ static int _gds_arr_shift_left(struct GDSArray* array, size_t start_idx)
     return 0;
 }
 
+
+static void _gds_arr_on_element_removal(struct GDSArray* array, void* data)
+{
+    if(array == NULL) return;
+    if(array->on_element_removal_func == NULL) return;
+
+    array->on_element_removal_func(data);
+}
+
+static int _gds_arr_on_element_removal_batch(struct GDSArray* array, size_t start_pos, size_t end_pos)
+{
+    if(array == NULL) return 1;
+    if(start_pos > end_pos) return 2;
+    if(array->count == 0) return 3;
+    if(start_pos > array->count - 1) return 4;
+    if(end_pos > array->count) return 5;
+
+    if(array->on_element_removal_func == NULL) return 0;
+
+    int i;
+    void* curr_element;
+    for(i = start_pos; i < end_pos; i++)
+    {
+        curr_element = gds_arr_at(array, i);
+        if(curr_element == NULL) return 6;
+        _gds_arr_on_element_removal(array, curr_element);
+    }
+
+    return 0;
+}

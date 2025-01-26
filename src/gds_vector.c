@@ -15,6 +15,7 @@ struct GDSVector
     size_t element_size;
     size_t min_count;
     void* data;
+    void (*on_element_removal_func)(void*);
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -72,7 +73,7 @@ static int _gds_vec_is_resizing_needed(struct GDSVector* vector, size_t new_coun
 /* Resizes vector by reallocating vector->data for (chunks_required * count_in_chunk * element_size + min_count * element_size) bytes of memory. 
  * This is in order to store the min_count of elements + the chunks needed to store the extra elements. This function does not check whether reallocating should happen, nor does
  * it check if a malloc() has been called for vector->data(). Make sure that: reallocating even needs to happen via the func _gds_vec_is_resizing_needed() and make sure that
- * vector->data != NULL.
+ * vector->data != NULL. Note: This function will not perform any calls to vector->on_element_removal_func(void*) even if shrinking occurs. Use a variant of gds_vec_set_size() instead.
  * Return value:
  * on success: 0
  * on failure: 1 - realloc() failed. */
@@ -92,10 +93,30 @@ static int _gds_vec_resize(struct GDSVector* vector, size_t chunks_required);
 static int _gds_vec_set_size_shared(struct GDSVector* vector, size_t new_size);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
+
+/* Invokes vector->on_element_removal_func(data) if the field is non-NULL. */
+static void _gds_vec_on_element_removal(struct GDSVector* vector, void* data);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
+/* Invokes _gds_vec_on_element_removal(struct GDSVector* vector, void* data) for each element starting from start_pos(including)
+ * , ending at end_pos (excluding). If start_pos == end_pos, no calls will be performed.
+ * Return value:
+ * on success: 0,
+ * on failure: 
+ * 1 - argument vector is NULL, 
+ * 2 - start_pos > end_pos, 
+ * 3 - vector->count = 0,
+ * 4. start_pos > vector->count - 1, 
+ * 5. end_pos > vector->count
+ * 6. gds_vec_at() returned NULL. */
+static int _gds_vec_on_element_removal_batch(struct GDSVector* vector, size_t start_pos, size_t end_pos);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-struct GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t element_size)
+struct GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t element_size, void (*on_element_removal_func)(void*))
 {
     if((count_in_chunk == 0) || (element_size == 0) || (min_count == 0)) return NULL;
 
@@ -116,6 +137,7 @@ struct GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t
     vector->min_count = min_count;
     vector->count = 0;
     vector->alloced_count = min_count;
+    vector->on_element_removal_func = on_element_removal_func;
 
     return vector;
 }
@@ -123,6 +145,8 @@ struct GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t
 void gds_vec_destruct(struct GDSVector* vector)
 {
     if(vector == NULL) return;
+
+    gds_vec_empty(vector);
 
     free(vector->data);
 
@@ -192,6 +216,10 @@ int gds_vec_remove(struct GDSVector* vector, size_t pos)
     if(vector == NULL) return VEC_REMOVE_ERR_NULL_VEC;
     if(pos >= vector->count) return VEC_REMOVE_ERR_POS_OUT_OF_BOUNDS;
 
+    void* element_addr = gds_vec_at(vector, pos);
+    if(element_addr == NULL) return VEC_REMOVE_ERR_AT_FAILED;
+    _gds_vec_on_element_removal(vector, element_addr);
+
     if(pos < (vector->count - 1))
     {
         int shift_op_status = _gds_vec_shift_left(vector, pos + 1);
@@ -201,7 +229,7 @@ int gds_vec_remove(struct GDSVector* vector, size_t pos)
     vector->count--;
 
     size_t chunks_required;
-    if(_gds_vec_is_resizing_needed(vector, vector->count -1, &chunks_required))
+    if(_gds_vec_is_resizing_needed(vector, vector->count - 1, &chunks_required))
     {
         int resize_op_status = _gds_vec_resize(vector, chunks_required);
         if(resize_op_status != 0) return VEC_REMOVE_ERR_RESIZE_OP_FAILED;
@@ -226,6 +254,13 @@ static int _gds_vec_set_size_shared(struct GDSVector* vector, size_t new_size)
 {
     if(vector == NULL) return 1;
 
+    size_t old_size = vector->count;
+    if(old_size > new_size)
+    {
+        int on_batch_removal_status = _gds_vec_on_element_removal_batch(vector, new_size, old_size);
+        if(on_batch_removal_status != 0) return 3;
+    }
+
     size_t chunks_required;
     int resize_needed = _gds_vec_is_resizing_needed(vector, new_size, &chunks_required);
 
@@ -245,6 +280,7 @@ int gds_vec_set_size_val(struct GDSVector* vector, size_t new_size, void* defaul
     if(vector == NULL) return VEC_SET_SIZE_VAL_NULL_VEC;
 
     size_t old_size = vector->count;
+    if(old_size == new_size) return 0;
 
     int set_size_status = _gds_vec_set_size_shared(vector, new_size);
     if(set_size_status != 0) return VEC_SET_SIZE_VAL_SHARED_FAIL;
@@ -270,6 +306,7 @@ int gds_vec_set_size_gen(struct GDSVector* vector, size_t new_size, void* (*el_g
     if(vector == NULL) return VEC_SET_SIZE_GEN_NULL_VEC;
 
     size_t old_size = vector->count;
+    if(old_size == new_size) return 0;
 
     int set_size_status = _gds_vec_set_size_shared(vector, new_size);
     if(set_size_status != 0) return VEC_SET_SIZE_GEN_SHARED_FAIL;
@@ -294,8 +331,8 @@ int gds_vec_empty(struct GDSVector* vector)
 {
     if(vector == NULL) return 1;
 
-    int resize_status =_gds_vec_resize(vector, 0);
-    if(resize_status != 0) return 2;
+    int set_size_status = gds_vec_set_size_val(vector, 0, NULL);
+    if(set_size_status != 0) return 2;
 
     vector->count = 0;
     return 0;
@@ -420,6 +457,36 @@ static int _gds_vec_resize(struct GDSVector* vector, size_t chunks_required)
     vector->data = realloc(vector->data, min_count * element_size + chunks_required * count_in_chunk * element_size);
     if(vector->data == NULL) return 1;
     vector->alloced_count = min_count + chunks_required * count_in_chunk;
+
+    return 0;
+}
+
+static void _gds_vec_on_element_removal(struct GDSVector* vector, void* data)
+{
+    if(vector == NULL) return;
+    if(vector->on_element_removal_func == NULL) return;
+
+    vector->on_element_removal_func(data);
+}
+
+static int _gds_vec_on_element_removal_batch(struct GDSVector* vector, size_t start_pos, size_t end_pos)
+{
+    if(vector == NULL) return 1;
+    if(start_pos > end_pos) return 2;
+    if(vector->count == 0) return 3;
+    if(start_pos > vector->count - 1) return 4;
+    if(end_pos > vector->count) return 5;
+
+    if(vector->on_element_removal_func == NULL) return 0;
+
+    int i;
+    void* curr_element;
+    for(i = start_pos; i < end_pos; i++)
+    {
+        curr_element = gds_vec_at(vector, i);
+        if(curr_element == NULL) return 6;
+        _gds_vec_on_element_removal(vector, curr_element);
+    }
 
     return 0;
 }
