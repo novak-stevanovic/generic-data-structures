@@ -54,9 +54,17 @@ static int _gds_vec_shift_left(struct GDSVector* vector, size_t start_idx);
 /* Gets count of chunks for given count, min_count and count_in_chunk parameters. For example:
  * For a vector with: 624 elements, min_count = 20, count_in_chunk = 100, the return value will be equal to 7 because 7 chunks of
  * 100 elements are required to store the whole vector. For the same vector with 601 elements, 6 chunks would suffice(600 + 20 > 601).
- * This function can be considered static in the object-oriented sense, as it is not tied to a particular vector.
+ * This function can be considered static in the object-oriented sense, as it is not tied to a particular vector. This function may be used
+ * to determine how many chunks has been allocated for a vector.
  * Return value: count of chunks needed to store vector with given parameters. */
 static size_t _gds_vec_get_count_of_chunks(ssize_t count, ssize_t min_count, ssize_t count_in_chunk);
+
+/* Invokes _gds_vec_get_count_of_chunks(vector->count, vector->min_count, vector->count_in_chunk).
+ * Return value:
+ * on success: positive number representing how many chunks(each consisting of vector->count_in_chunk elements) are needed to store
+ * vector's data. Example given above.
+ * on failure: -1 - vector is NULL. */
+static ssize_t _gds_vec_get_count_of_chunks_for_vec(struct GDSVector* vector);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -365,6 +373,11 @@ int gds_vec_set_resize_count(struct GDSVector* vector, size_t count_in_chunk)
     if(vector == NULL) return -1;
 
     vector->count_in_chunk = count_in_chunk;
+
+    size_t chunks_required = _gds_vec_get_count_of_chunks_for_vec(vector);
+    int resize_status = _gds_vec_resize(vector, chunks_required);
+    if(resize_status != 0) return -2;
+
     return 0;
 }
 
@@ -378,6 +391,21 @@ void* gds_vec_get_data(const struct GDSVector* vector)
 size_t gds_vec_get_struct_size()
 {
     return sizeof(struct GDSVector);
+}
+
+ssize_t gds_vec_set_min_count(struct GDSVector* vector, size_t new_min_count)
+{
+    if(vector == NULL) return -1;
+
+    if(vector->min_count == new_min_count) return 0;
+
+    vector->min_count = new_min_count;
+
+    size_t chunks_required = _gds_vec_get_count_of_chunks_for_vec(vector);
+    int resize_status = _gds_vec_resize(vector, chunks_required);
+    if(resize_status != 0) return -2;
+
+    return 0;
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -427,14 +455,21 @@ static size_t _gds_vec_get_count_of_chunks(ssize_t count, ssize_t min_count, ssi
     return gds_misc_max(0, (count - min_count) / count_in_chunk + ((count - min_count) % count_in_chunk > 0));
 }
 
+static ssize_t _gds_vec_get_count_of_chunks_for_vec(struct GDSVector* vector)
+{
+    if(vector == NULL) return -1;
+
+    return _gds_vec_get_count_of_chunks(vector->count, vector->min_count, vector->count_in_chunk);
+}
+
 static int _gds_vec_is_resizing_needed(struct GDSVector* vector, size_t new_count, size_t* out_chunks_required)
 {
     ssize_t alloced_count = vector->alloced_count;
     ssize_t count_in_chunk = vector->count_in_chunk;
     ssize_t min_count = vector->min_count;
 
-    ssize_t chunks_required = _gds_vec_get_count_of_chunks(new_count, min_count, count_in_chunk);
     ssize_t chunks_alloced = _gds_vec_get_count_of_chunks(alloced_count, min_count, count_in_chunk);
+    ssize_t chunks_required = _gds_vec_get_count_of_chunks(new_count, min_count, count_in_chunk);
 
     if(chunks_required != chunks_alloced)
     {
