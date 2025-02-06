@@ -21,7 +21,7 @@
 *   to properly free the memory of elements removed from the vector.
 * - In this case, the `void*` parameter represents a pointer to an element inside the vector,
 *   which itself is a pointer to a dynamically allocated object */
-struct GDSVector;
+typedef struct GDSVector GDSVector;
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ void* gds_vec_at(const struct GDSVector* vector, size_t pos);
 #define VEC_ASSIGN_ERR_NULL_VEC (VEC_ASSIGN_ERR_BASE + 1) // argument vector equals to NULL
 #define VEC_ASSIGN_ERR_NULL_DATA (VEC_ASSIGN_ERR_BASE + 2) // argument data equals to NULL
 #define VEC_ASSIGN_ERR_POS_OUT_OF_BOUNDS (VEC_ASSIGN_ERR_BASE + 3) // arugment pos is not of lesser value than vector->count
-#define VEC_ASSIGN_ERR_INVALID_ADDR_FOUND (VEC_ASSIGN_ERR_BASE + 4) // internal func _gds_vec_get_element_addr(struct GDSVector* vec, size_t pos) returned NULL.
+#define _VEC_ASSIGN_FERR_INVALID_ADDR_FOUND (VEC_ASSIGN_ERR_BASE + 4) // internal func _gds_vec_get_element_addr() returned NULL.
 
 /* Assigns data pointed to by data to position pos inside vector. Keep in mind that the maximum value of pos must be vector->count - 1. Function relies on gds_vec_at()
  * to find the required address for the following memcpy() call.
@@ -68,9 +68,9 @@ int gds_vec_assign(struct GDSVector* vector, const void* data, size_t pos);
 #define VEC_INSERT_ERR_NULL_VEC (VEC_INSERT_ERR_BASE + 1) // argument vector equals to NULL
 #define VEC_INSERT_ERR_NULL_DATA (VEC_INSERT_ERR_BASE + 2) // argument data equals to NULL
 #define VEC_INSERT_ERR_POS_OUT_OF_BOUNDS (VEC_INSERT_ERR_BASE + 3) // arugment pos is of greater value than vector->count.
-#define VEC_INSERT_ERR_RESIZE_OP_FAILED (VEC_INSERT_ERR_BASE + 4) // internal function _vec_resize(struct GDSVector* vector, size_t chunks_required) failed.
-#define VEC_INSERT_ERR_SHIFTING_OP_FAILED (VEC_INSERT_ERR_BASE + 4) // internal function _gds_vec_shift_right(struct GDSVector* vector, size_t start_idx) failed.
-#define VEC_INSERT_ERR_ASSIGN_OP_FAILED (VEC_INSERT_ERR_BASE + 5) // function gds_vec_assign(struct GDSVector* vector, const void* data, size_t pos) failed.
+#define VEC_INSERT_FERR_RESIZE_OP_FAILED (VEC_INSERT_ERR_BASE + 4) // internal function _vec_resize() failed.
+#define _VEC_INSERT_FERR_SHIFTING_OP_FAILED (VEC_INSERT_ERR_BASE + 4) // internal function _gds_vec_shift_right() failed.
+#define _VEC_INSERT_FERR_ASSIGN_OP_FAILED (VEC_INSERT_ERR_BASE + 5) // function gds_vec_assign() failed.
 
 /* Inserts element pointed at by data at index pos in the vector. May result in resizing of vector. Performs a call to _gds_vec_shift_right() to 
  * make space for the new element at pos. Performs a call to gds_vec_assign() to assign value to position of new element.
@@ -85,8 +85,8 @@ int gds_vec_insert(struct GDSVector* vector, const void* data, size_t pos);
 
 #define VEC_APPEND_ERR_NULL_VEC (VEC_APPEND_ERR_BASE + 1) // argument vector equals to NULL
 #define VEC_APPEND_ERR_NULL_DATA (VEC_APPEND_ERR_BASE + 2) // argument data equals to NULL
-#define VEC_APPEND_ERR_RESIZE_OP_FAILED (VEC_APPEND_ERR_BASE + 4) // internal function _gds_vec_resize(struct GDSVector* vector, size_t chunks_required) failed.
-#define VEC_APPEND_ERR_ASSIGN_OP_FAILED (VEC_APPEND_ERR_BASE + 5) // function gds_vec_assign(struct GDSVector* vector, const void* data, size_t pos) failed.
+#define VEC_APPEND_FERR_RESIZE_OP_FAILED (VEC_APPEND_ERR_BASE + 4) // internal function _gds_vec_resize() failed.
+#define _VEC_APPEND_FERR_ASSIGN_OP_FAILED (VEC_APPEND_ERR_BASE + 5) // function gds_vec_assign() failed.
 
 /* Appends data pointed at by data at the end of the vector. Calls gds_vec_insert() by specyfing pos as vector->count.
  * May result in resizing of vector.
@@ -101,11 +101,12 @@ int gds_vec_append(struct GDSVector* vector, const void* data);
 
 #define VEC_REMOVE_ERR_NULL_VEC (VEC_REMOVE_ERR_BASE + 1) // argument vector equals to NULL
 #define VEC_REMOVE_ERR_POS_OUT_OF_BOUNDS (VEC_REMOVE_ERR_BASE + 2) // arugment pos is of greater value than vector->count.
-#define VEC_REMOVE_ERR_SHIFTING_OP_FAILED (VEC_REMOVE_ERR_BASE + 3) // internal function _gds_vec_shift_left(struct GDSVector* vector, size_t start_idx) failed.
-#define VEC_REMOVE_ERR_RESIZE_OP_FAILED (VEC_REMOVE_ERR_BASE + 4) // internal function _gds_vec_resize(struct GDSVector* vector, size_t chunks_required) failed.
-#define VEC_REMOVE_ERR_AT_FAILED (VEC_REMOVE_ERR_BASE + 5) // call to gds_vec_at(struct GDSVector* vector, size_t pos) returned NULL.
+#define _VEC_REMOVE_FERR_SHIFTING_OP_FAILED (VEC_REMOVE_ERR_BASE + 3) // internal function _gds_vec_shift_left() failed.
+#define VEC_REMOVE_FERR_RESIZE_OP_FAILED (VEC_REMOVE_ERR_BASE + 4) // internal function _gds_vec_resize() failed.
+#define _VEC_REMOVE_FERR_AT_FAILED (VEC_REMOVE_ERR_BASE + 5) // call to gds_vec_at() returned NULL.
 
-/* Removes element at index pos in vector. May result in resizing of vector. Function shifts the elements right of(including) pos leftwards by calling _gds_vec_shift_left().
+/* Removes element at index pos in vector. May result in resizing of vector. Function shifts the elements right of(including) pos leftwards by
+ * calling _gds_vec_shift_left().
  * Return value:
  * on success: 0,
  * on failure: one of the error codes above. */
@@ -117,8 +118,8 @@ int gds_vec_remove(struct GDSVector* vector, size_t pos);
 
 #define VEC_POP_ERR_NULL_VEC (VEC_POP_ERR_BASE + 1) // argument vector equals to NULL
 #define VEC_POP_ERR_VEC_EMPTY (VEC_POP_ERR_BASE + 2) // arugment pos is of greater value than vector->count.
-#define VEC_POP_ERR_RESIZE_OP_FAILED (VEC_POP_ERR_BASE + 4) // internal function _gds_vec_resize(struct GDSVector* vector, size_t chunks_required) failed.
-#define VEC_POP_ERR_AT_FAILED (VEC_POP_ERR_BASE + 5) // call to gds_vec_at(struct GDSVector* vector, size_t pos) returned NULL.
+#define VEC_POP_FERR_RESIZE_OP_FAILED (VEC_POP_ERR_BASE + 4) // internal function _gds_vec_resize() failed.
+#define _VEC_POP_FERR_AT_FAILED (VEC_POP_ERR_BASE + 5) // call to gds_vec_at() returned NULL.
 
 /* Removes last element of vector. May result in resizing of vector. Performs a call to gds_vec_remove(vector, vector->count - 1).
  * Return value:
@@ -130,11 +131,11 @@ int gds_vec_pop(struct GDSVector* vector);
 
 #define VEC_SET_SIZE_VAL_ERR_BASE (VEC_ERR_BASE + 60)
 
-#define VEC_SET_SIZE_VAL_NULL_VEC (VEC_SET_SIZE_VAL_ERR_BASE + 1) // argument vector is NULL
-#define VEC_SET_SIZE_VAL_SHARED_FAIL (VEC_SET_SIZE_VAL_ERR_BASE + 2) // internal call to _gds_vec_set_size_shared(struct GDSVector* vector, size_t new_size) failed.
-#define VEC_SET_SIZE_VAL_NULL_DEFAULT_VAL (VEC_SET_SIZE_VAL_ERR_BASE + 3) // function needs to expand the vector but provided default_val arg is NULL.
-#define VEC_SET_SIZE_VAL_ASSIGN_FAIL (VEC_SET_SIZE_VAL_ERR_BASE + 4) // expanding of vector by repeated
-                                                                     // calling gds_vec_assign(struct GDSVector* vector, const void* data, size_t pos) failed.
+#define VEC_SET_SIZE_VAL_ERR_NULL_VEC (VEC_SET_SIZE_VAL_ERR_BASE + 1) // argument vector is NULL
+#define VEC_SET_SIZE_VAL_ERR_SHARED_FAIL (VEC_SET_SIZE_VAL_ERR_BASE + 2) // internal call to _gds_vec_set_size_shared() failed.
+#define VEC_SET_SIZE_VAL_ERR_NULL_DEFAULT_VAL (VEC_SET_SIZE_VAL_ERR_BASE + 3) // function needs to expand the vector but provided 
+                                                                              // default_val arg is NULL.
+#define _VEC_SET_SIZE_VAL_FERR_ASSIGN_FAIL (VEC_SET_SIZE_VAL_ERR_BASE + 4) // expanding of vector by repeated calling gds_vec_assign() failed.
 
 /* Sets the count of elements of vector to new_count. If the vector's count is:
  * 1. greater than new_size - the vector will be shrank to the new size.
@@ -153,11 +154,12 @@ int gds_vec_set_size_val(struct GDSVector* vector, size_t new_size, void* defaul
 
 #define VEC_SET_SIZE_GEN_ERR_BASE (VEC_ERR_BASE + 70)
 
-#define VEC_SET_SIZE_GEN_NULL_VEC (VEC_SET_SIZE_GEN_ERR_BASE + 1) // arguemnt vector is NULL
-#define VEC_SET_SIZE_GEN_SHARED_FAIL (VEC_SET_SIZE_GEN_ERR_BASE + 2) // internal call to _gds_vec_set_size_shared(struct GDSVector* vector, size_t new_size) failed.
-#define VEC_SET_SIZE_GEN_NULL_GEN_FUNC (VEC_SET_SIZE_GEN_ERR_BASE + 3) // function needs to expand the vector but provided el_gen_func arg is NULL.
-#define VEC_SET_SIZE_GEN_ASSIGN_FAIL (VEC_SET_SIZE_GEN_ERR_BASE + 4) // expanding of vector by repeated
-                                                                     // calling gds_vec_assign(struct GDSVector* vector, const void* data, size_t pos) failed.
+#define VEC_SET_SIZE_GEN_ERR_NULL_VEC (VEC_SET_SIZE_GEN_ERR_BASE + 1) // arguemnt vector is NULL
+#define VEC_SET_SIZE_GEN_ERR_SHARED_FAIL (VEC_SET_SIZE_GEN_ERR_BASE + 2) // internal call to _gds_vec_set_size_shared() failed.
+#define VEC_SET_SIZE_GEN_ERR_NULL_GEN_FUNC (VEC_SET_SIZE_GEN_ERR_BASE + 3) // function needs to expand the vector but provided 
+                                                                       // el_gen_func arg is NULL.
+#define _VEC_SET_SIZE_GEN_FERR_ASSIGN_FAIL (VEC_SET_SIZE_GEN_ERR_BASE + 4) // expanding of vector by repeated
+                                                                     // calling gds_vec_assign() failed.
 
 /* Sets the count of elements of vector to new_count. If the vector's count is:
  * 1. greater than new_size - the vector will be shrank to the new size.
