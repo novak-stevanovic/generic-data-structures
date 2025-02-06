@@ -10,7 +10,7 @@
 * size_t max_count - array capacity,
 * size_t element_size - size of each element,
 * void* data - address of array beginning.
-* 7 - void on_element_removal_func(void*) - pointer to a callback function that is called on element removal, for each removed element.
+* void on_element_removal_func(void*) - pointer to a callback function that is called on element removal, for each removed element.
 * void* parameter - a pointer to the element stored in the array. Note:
 * - The array may store pointers to dynamically allocated objects. This function can be used 
 *   to properly free the memory of elements removed from the array.
