@@ -216,11 +216,27 @@ ssize_t gds_vec_set_min_count(struct GDSVector* vector, size_t new_min_count);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
+/* Gets vector's min_count.
+ * Return value:
+ * on success: non-negative value equal to vector's min_count field,
+ * on failure: -1, argument vector is NULL. */
+ssize_t gds_vec_get_min_count(const struct GDSVector* vector);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
 /* Returns address of data in vector.
  * Return value: 
  * on success: address of vector->data.
  * on failure: NULL - vector is null. */
 void* gds_vec_get_data(const struct GDSVector* vector);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
+/* Returns value of vector's element_size field.
+ * Return value:
+ * on success: value greater than 0, representing the vector's element_size field,
+ * on failure: 0 - argument vector is NULL. */
+size_t gds_vec_get_element_size(const struct GDSVector* vector);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 

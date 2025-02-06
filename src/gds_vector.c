@@ -361,6 +361,28 @@ ssize_t gds_vec_get_count(const struct GDSVector* vector)
     return vector->count;
 }
 
+ssize_t gds_vec_set_min_count(struct GDSVector* vector, size_t new_min_count)
+{
+    if(vector == NULL) return -1;
+
+    if(vector->min_count == new_min_count) return 0;
+
+    vector->min_count = new_min_count;
+
+    size_t chunks_required = _gds_vec_get_count_of_chunks_for_vec(vector);
+    int resize_status = _gds_vec_resize(vector, chunks_required);
+    if(resize_status != 0) return -2;
+
+    return 0;
+}
+
+ssize_t gds_vec_get_min_count(const struct GDSVector* vector)
+{
+    if(vector == NULL) return -1;
+
+    return vector->min_count;
+}
+
 ssize_t gds_vec_get_resize_count(const struct GDSVector* vector)
 {
     if(vector == NULL) return -1;
@@ -388,24 +410,16 @@ void* gds_vec_get_data(const struct GDSVector* vector)
     return vector->data;
 }
 
+size_t gds_vec_get_element_size(const struct GDSVector* vector)
+{
+    if(vector == NULL) return 0;
+
+    return vector->element_size;
+}
+
 size_t gds_vec_get_struct_size()
 {
     return sizeof(struct GDSVector);
-}
-
-ssize_t gds_vec_set_min_count(struct GDSVector* vector, size_t new_min_count)
-{
-    if(vector == NULL) return -1;
-
-    if(vector->min_count == new_min_count) return 0;
-
-    vector->min_count = new_min_count;
-
-    size_t chunks_required = _gds_vec_get_count_of_chunks_for_vec(vector);
-    int resize_status = _gds_vec_resize(vector, chunks_required);
-    if(resize_status != 0) return -2;
-
-    return 0;
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------

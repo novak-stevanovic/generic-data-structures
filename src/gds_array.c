@@ -59,9 +59,9 @@ static void _gds_arr_on_element_removal(struct GDSArray* array, void* data);
  * 1 - argument array is NULL, 
  * 2 - start_pos > end_pos, 
  * 3 - array->count = 0,
- * 4. start_pos > array->count - 1, 
- * 5. end_pos > array->count
- * 6. gds_arr_at() returned NULL. */
+ * 4 - start_pos > array->count - 1, 
+ * 5 - end_pos > array->count
+ * 6 - gds_arr_at() returned NULL. */
 static int _gds_arr_on_element_removal_batch(struct GDSArray* array, size_t start_pos, size_t end_pos);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -292,6 +292,13 @@ void* gds_arr_get_data(const struct GDSArray* array)
     if(array == NULL) return NULL;
 
     return array->data;
+}
+
+size_t gds_arr_get_element_size(const struct GDSArray* array)
+{
+    if(array == NULL) return 0;
+
+    return array->element_size;
 }
 
 size_t gds_arr_get_struct_size()

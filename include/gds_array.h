@@ -207,6 +207,14 @@ void* gds_arr_get_data(const struct GDSArray* array);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
+/* Returns element size of array.
+ * Return value:
+ * on success: value greater than 0, representing the value of element_size field in array,
+ * on failure: 0 - argument array is NULL. */
+size_t gds_arr_get_element_size(const struct GDSArray* array);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
 /* Performs sizeof(struct GDSArray) and returns the value */
 size_t gds_arr_get_struct_size();
 
