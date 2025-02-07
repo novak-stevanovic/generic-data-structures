@@ -278,6 +278,7 @@ int gds_vec_set_size(struct GDSVector* vector, size_t new_size, void (*assign_fu
         for(i = old_size; i < new_size; i++)
         {
             element_addr = gds_vec_at(vector, i);
+            assign_func(element_addr, data);
             gds_rcheck(element_addr != NULL, _VEC_SET_SIZE_FERR_AT_FAIL);
         }
     }
