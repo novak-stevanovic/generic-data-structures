@@ -127,7 +127,6 @@ int gds_arr_assign(struct GDSArray* array, size_t pos, const void* data)
 int gds_arr_append(struct GDSArray* array, const void* data)
 {
     int insert_op_status = gds_arr_insert(array, data, array->count);
-    printf("DEBUG: %d\n", insert_op_status);
     if(insert_op_status != 0)
         return insert_op_status - ARR_INSERT_ERR_BASE + ARR_APPEND_ERR_BASE; // convert to insert error code
     else
@@ -151,9 +150,7 @@ int gds_arr_insert(struct GDSArray* array, const void* data, size_t pos)
     array->count++; // it is important to increase the count first, so that the gsd_arr_assign() function will work.
 
     int assign_op_status = gds_arr_assign(array, pos, data);
-    printf("ASSIGN: %d\n", assign_op_status);
     gds_rcheck(assign_op_status == 0, _ARR_INSERT_FERR_ASSIGN_FAIL);
-    printf("ODADA\n");
 
     return 0;
 
