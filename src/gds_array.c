@@ -191,58 +191,31 @@ int gds_arr_pop(struct GDSArray* array)
         return 0;
 }
 
-int gds_arr_set_size_val(struct GDSArray* array, size_t new_count, void* default_val)
+int gds_arr_set_size(struct GDSArray* array, size_t new_count, void (*assign_func)(void*, void*), void* data)
 {
-    if(array == NULL) return ARR_SET_SIZE_VAL_ERR_NULL_ARR;
-    if(new_count > array->max_count) return ARR_SET_SIZE_VAL_ERR_INVALID_NEW_COUNT_ARG;
+    if(array == NULL) return ARR_SET_SIZE_ERR_NULL_ARR;
+    if(new_count > array->max_count) return ARR_SET_SIZE_ERR_INVALID_NEW_COUNT_ARG;
     
     size_t old_count = array->count;
 
     if(old_count > new_count)
     {
         int batch_removal_status = _gds_arr_on_element_removal_batch(array, new_count, old_count);
-        gds_rcheck(batch_removal_status == 0, _ARR_SET_SIZE_VAL_ERR_ON_BATCH_REMOVAL_FAIL);
+        gds_rcheck(batch_removal_status == 0, _ARR_SET_SIZE_ERR_ON_BATCH_REMOVAL_FAIL);
         array->count = new_count;
     }
     else if(old_count < new_count)
     {
-        if(default_val == NULL) return ARR_SET_SIZE_VAL_ERR_NULL_DEFAULT_VAL;
+        if(assign_func == NULL) return ARR_SET_SIZE_ERR_NULL_ASSIGN_FUNC;
 
-        int i, assign_status;
+        int i;
+        void* element_addr;
         array->count = new_count;
         for(i = old_count; i < new_count; i++)
         {
-            assign_status = gds_arr_assign(array, old_count, default_val);
-            gds_rcheck(assign_status == 0, _ARR_SET_SIZE_VAL_FERR_ASSIGN_FAIL);
-        }
-    }
-
-    return 0;
-}
-
-int gds_arr_set_size_gen(struct GDSArray* array, size_t new_count, void* (*el_gen_func)(void* data), void* data)
-{
-    if(array == NULL) return ARR_SET_SIZE_GEN_ERR_NULL_ARR;
-    if(new_count > array->max_count) return ARR_SET_SIZE_GEN_ERR_INVALID_NEW_COUNT_ARG;
-    
-    size_t old_count = array->count;
-
-    if(old_count > new_count)
-    {
-        int batch_removal_status = _gds_arr_on_element_removal_batch(array, new_count, old_count);
-        gds_rcheck(batch_removal_status == 0, _ARR_SET_SIZE_GEN_FERR_ON_BATCH_REMOVAL_FAIL);
-        array->count = new_count;
-    }
-    else if(old_count < new_count)
-    {
-        if(el_gen_func == NULL) return ARR_SET_SIZE_GEN_ERR_NULL_GEN_FUNC;
-
-        int i, assign_status;
-        array->count = new_count;
-        for(i = old_count; i < new_count; i++)
-        {
-            assign_status = gds_arr_assign(array, old_count, el_gen_func(data));
-            gds_rcheck(assign_status == 0, _ARR_SET_SIZE_GEN_FERR_ASSIGN_FAIL);
+            element_addr = gds_arr_at(array, i);
+            assign_func(element_addr, data);
+            gds_rcheck(element_addr != NULL, _ARR_SET_SIZE_FERR_AT_FAIL);
         }
     }
 
@@ -253,7 +226,7 @@ int gds_arr_empty(struct GDSArray* array)
 {
     if(array == NULL) return 1;
 
-    int set_size_status = gds_arr_set_size_val(array, 0, NULL);
+    int set_size_status = gds_arr_set_size(array, 0, NULL, NULL);
     if(set_size_status != 0) return 2;
 
     return 0;
