@@ -1,10 +1,8 @@
 CC = gcc
-C_OBJ_FLAGS = -c -Iinclude -Wall -fPIC
+C_FLAGS = -c -Iinclude -Wall -fPIC
+TEST_C_FLAGS = -c -Iinclude
 
 INSTALL_PREFIX = /usr/local
-
-C_SRC = $(shell find src -name "*.c")
-C_OBJ = $(patsubst src/%.c,build/%.o,$(C_SRC))
 
 LIB = gds
 SO_LIB = lib$(LIB).so
@@ -12,16 +10,23 @@ SO_FLAGS = -shared
 
 .PHONY: clean install uninstall
 
-$(SO_LIB): $(C_OBJ)
-	$(CC) $(SO_FLAGS) $(C_OBJ) -o $(SO_LIB)
+$(SO_LIB): build/gds_array.o build/gds_vector.o build/gds_misc.o
+	$(CC) $(SO_FLAGS) $^ -o $@
 
-$(C_OBJ): build/%.o: src/%.c build
-	mkdir -p $(dir $@)
-	$(CC) $(C_OBJ_FLAGS) $< -o $@
+build/gds_array.o: src/gds_array.c include/gds.h include/gds_array.h include/gds_misc.h build
+	$(CC) $(C_FLAGS) $< -o $@
 
-test: $(C_OBJ) build
-	gcc -c -Iinclude -Wall tests.c -o build/tests.o
-	gcc $(C_OBJ) build/tests.o -o test
+build/gds_vector.o: src/gds_vector.c include/gds.h include/gds_vector.h include/gds_misc.h build
+	$(CC) $(C_FLAGS) $< -o $@
+
+build/gds_misc.o: src/gds_misc.c include/gds_misc.h build
+	$(CC) $(C_FLAGS) $< -o $@
+
+test: build/tests.o build build/gds_array.o build/gds_vector.o build/gds_misc.o
+	$(CC) $^ -o test
+
+build/tests.o: tests.c build
+	$(CC) $(TEST_C_FLAGS) $< -o build/tests.o
 
 build:
 	mkdir -p build/
