@@ -68,28 +68,37 @@ static int _gds_arr_on_element_removal_batch(GDSArray* array, size_t start_pos, 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-GDSArray* gds_arr_create(size_t max_count, size_t element_size, void (*on_element_removal_func)(void*))
+int gds_arr_init(GDSArray* array, size_t max_count, size_t element_size, void (*on_element_removal_func)(void*))
 {
-    if((max_count == 0) || (element_size == 0)) return NULL;
-
-    GDSArray* array = (GDSArray*)malloc(sizeof(GDSArray));
+    if(array == NULL) return 1;
+    if((max_count == 0) || (element_size == 0)) return 2;
 
     array->_max_count = max_count;
     array->_element_size = element_size;
     array->_on_element_removal_func = on_element_removal_func;
     array->_count = 0;
 
-    if(array == NULL) return NULL;
-
     array->_data = malloc(max_count * element_size);
 
     if(array->_data == NULL)
     {
         free(array);
-        return NULL;
+        return 3;
     }
 
-    return array;
+    return 0;
+}
+
+GDSArray* gds_arr_create(size_t max_count, size_t element_size, void (*on_element_removal_func)(void*))
+{
+    if((max_count == 0) || (element_size == 0)) return NULL;
+
+    GDSArray* array = (GDSArray*)malloc(sizeof(GDSArray));
+    if(array == NULL) return NULL;
+
+    int init_status = gds_arr_init(array, max_count, element_size, on_element_removal_func);
+
+    return (init_status == 0) ? array : NULL;
 }
 
 void gds_arr_destruct(GDSArray* array)

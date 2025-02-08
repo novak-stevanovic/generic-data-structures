@@ -111,20 +111,17 @@ static int _gds_vec_on_element_removal_batch(GDSVector* vector, size_t start_pos
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t element_size, void (*on_element_removal_func)(void*))
+int gds_vec_init(GDSVector* vector, size_t min_count, size_t count_in_chunk, size_t element_size, void (*on_element_removal_func)(void*))
 {
-    if((count_in_chunk == 0) || (element_size == 0) || (min_count == 0)) return NULL;
-
-    GDSVector* vector = (GDSVector*)malloc(sizeof(GDSVector));
-
-    if(vector == NULL) return NULL;
+    if(vector == NULL) return 1;
+    if((count_in_chunk == 0) || (element_size == 0) || (min_count == 0)) return 2;
 
     vector->_data = malloc(element_size * min_count);
 
     if(vector->_data == NULL)
     {
         free(vector);
-        return NULL;
+        return 3;
     }
 
     vector->_element_size = element_size;
@@ -134,7 +131,18 @@ GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t elemen
     vector->_alloced_count = min_count;
     vector->_on_element_removal_func = on_element_removal_func;
 
-    return vector;
+    return 0;
+}
+
+GDSVector* gds_vec_create(size_t min_count, size_t count_in_chunk, size_t element_size, void (*on_element_removal_func)(void*))
+{
+    GDSVector* vector = (GDSVector*)malloc(sizeof(GDSVector));
+
+    if(vector == NULL) return NULL;
+
+    int init_status = gds_vec_init(vector, min_count, count_in_chunk, element_size, on_element_removal_func);
+
+    return (init_status == 0) ? vector : NULL;
 }
 
 void gds_vec_destruct(GDSVector* vector)
