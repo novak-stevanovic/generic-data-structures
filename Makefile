@@ -13,19 +13,19 @@ SO_FLAGS = -shared
 $(SO_LIB): build/gds_array.o build/gds_vector.o build/gds_misc.o
 	$(CC) $(SO_FLAGS) $^ -o $@
 
-build/gds_array.o: src/gds_array.c include/gds.h include/gds_array.h include/gds_misc.h build
+build/gds_array.o: src/gds_array.c include/gds.h include/gds_array.h include/gds_misc.h | build
 	$(CC) $(C_FLAGS) $< -o $@
 
-build/gds_vector.o: src/gds_vector.c include/gds.h include/gds_vector.h include/gds_misc.h build
+build/gds_vector.o: src/gds_vector.c include/gds.h include/gds_vector.h include/gds_misc.h | build
 	$(CC) $(C_FLAGS) $< -o $@
 
-build/gds_misc.o: src/gds_misc.c include/gds_misc.h build
+build/gds_misc.o: src/gds_misc.c include/gds_misc.h | build
 	$(CC) $(C_FLAGS) $< -o $@
 
 test: build/tests.o build build/gds_array.o build/gds_vector.o build/gds_misc.o
 	$(CC) $^ -o test
 
-build/tests.o: tests.c build
+build/tests.o: tests.c | build
 	$(CC) $(TEST_C_FLAGS) $< -o build/tests.o
 
 build:
