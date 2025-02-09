@@ -2,14 +2,16 @@
 #define _GDS_FORWARD_LIST_H_
 
 #include "gds.h"
-#include <stddef.h>
+#include <stdlib.h>
 
 #ifdef GDS_ENABLE_OPAQUE_STRUCTS
-struct GDSForwardList;
-typedef struct GDSForwardList GDSForwardList;
+struct GDSArray;
 #else
+#define __GDS_FORWARD_LIST_DEF_ALLOW__
 #include "def/gds_forward_list_def.h"
 #endif
+
+typedef struct GDSForwardList GDSForwardList;
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -36,5 +38,7 @@ gds_err gds_forward_list_insert_at(GDSForwardList* list, const void* data, size_
 gds_err gds_forward_list_pop_front(GDSForwardList* list);
 gds_err gds_forward_list_remove_last(GDSForwardList* list);
 gds_err gds_forward_list_remove_at(GDSForwardList* list, size_t pos);
+
+ssize_t gds_forward_list_get_count(const GDSForwardList* list);
 
 #endif

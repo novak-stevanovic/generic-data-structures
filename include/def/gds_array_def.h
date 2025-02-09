@@ -1,5 +1,13 @@
-#ifndef _GDS_ARRAY_DEF_H_
-#define _GDS_ARRAY_DEF_H_
+// INTERNAL HEADER FILE - DO NOT INCLUDE DIRECTLY.
+
+#ifndef __GDS_ARRAY_DEF_H__
+#define __GDS_ARRAY_DEF_H__
+
+#ifndef __GDS_ARRAY_DEF_ALLOW__
+#error "Do not include directly."
+#endif // __GDS_ARRAY_DEF_ALLOW__
+
+// ---------------------------------------------------------------------------------------------------------------------------------------
 
 #include <stddef.h>
 

@@ -6,10 +6,12 @@
 
 #ifdef GDS_ENABLE_OPAQUE_STRUCTS
 struct GDSArray;
-typedef struct GDSArray GDSArray;
 #else
+#define __GDS_ARRAY_DEF_ALLOW__
 #include "def/gds_array_def.h"
 #endif
+
+typedef struct GDSArray GDSArray;
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 

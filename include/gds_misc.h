@@ -1,5 +1,5 @@
-#ifndef GDS_MISC_H
-#define GDS_MISC_H
+#ifndef _GDS_MISC_H_
+#define _GDS_MISC_H_
 
 #include <stdio.h>
 
