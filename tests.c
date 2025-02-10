@@ -13,7 +13,7 @@ void _debug_print_my_list(GDSForwardList* list, int verbose)
     {
         void* it = NULL;
         int i;
-        for(i = 0; i < list->_count; i++)
+        for(i = 0; i < gds_forward_list_get_count(list); i++)
         {
             it = gds_forward_list_at(list, i);
             printf("%d ", *(int*)it);

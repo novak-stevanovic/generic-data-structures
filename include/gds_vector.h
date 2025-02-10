@@ -18,22 +18,19 @@ typedef struct GDSVector GDSVector;
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
 #define GDS_VEC_ERR_BASE 3000
-#define GDS_VEC_ERR_ARR_EMPTY 3001
+#define GDS_VEC_ERR_VEC_EMPTY 3001
 #define GDS_VEC_ERR_MALLOC_FAIL 3002
 #define GDS_VEC_ERR_REALLOC_FAIL 3003
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
-#ifndef GDS_ENABLE_OPAQUE_STRUCTS
 gds_err gds_vector_init(GDSVector* vector,
         size_t element_size,
         void (*on_element_removal_func)(void*),
         size_t min_capacity,
         size_t (*_get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size));
 
-#endif // GDS_ENABLE_OPAQUE_STRUCTS
-
-// ------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
 
 GDSVector* gds_vector_create(size_t element_size,
         void (*on_element_removal_func)(void*),
@@ -66,10 +63,6 @@ gds_err gds_vector_insert_at(GDSVector* vector, const void* data, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_vector_insert_at_beginning(GDSVector* vector, const void* data);
-
-// ---------------------------------------------------------------------------------------------------------------------
-
 gds_err gds_vector_pop_back(GDSVector* vector);
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -78,15 +71,11 @@ gds_err gds_vector_remove_at(GDSVector* vector, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_vector_remove_first(GDSVector* vector);
+gds_err gds_vector_empty(GDSVector* vector);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_vector_empty(const GDSVector* vector);
-
-// ---------------------------------------------------------------------------------------------------------------------
-
-gds_err gds_vector_alloc_chunk(GDSVector* vector, size_t new_chunk_size);
+gds_err gds_vector_prealloc(GDSVector* vector, size_t new_chunk_size);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

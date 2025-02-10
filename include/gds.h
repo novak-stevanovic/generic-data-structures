@@ -2,6 +2,7 @@
 #define GDS_H
 
 // TODO add restrict to func params and inline to func signatures
+// TODO error codes for init funcs
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 
@@ -25,6 +26,7 @@ a value, x being the 'index' of the invalid argument(starting from 1). */
 typedef int gds_err;
 
 #define GDS_SUCCESS 0
+#define GDS_FAILURE -1
 
 #define _GDS_GEN_ERR_BASE 1000
 
@@ -38,7 +40,7 @@ typedef int gds_err;
 found in the corresponding .c files. However, if the user wishes for more control, he may want to make the 
 structs not opaque. This can be done by commenting the macro below (GDS_ENABLE_OPAQUE_STRUCTS). */
 
-// #define GDS_ENABLE_OPAQUE_STRUCTS
+#define GDS_ENABLE_OPAQUE_STRUCTS
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 

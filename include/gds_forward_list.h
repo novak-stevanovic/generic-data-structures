@@ -23,9 +23,7 @@ typedef struct GDSForwardList GDSForwardList;
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
-#ifdef GDS_DISABLE_OPAQUE_STRUCTS
 gds_err gds_forward_list_init(GDSForwardList* list, size_t data_size, void (*_on_element_removal_func)(void*));
-#endif
 
 // ---------------------------------------------------------------------------------------------------------------------
 

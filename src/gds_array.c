@@ -11,44 +11,32 @@
 #include "def/gds_array_def.h"
 #endif // GDS_ENABLE_OPAQUE_STRUCTS
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------
 
-/* Shift elements right of index(including) start_idx rightward by calling memmove(). This function cannot expand the array if there is not enough memory allocated. Make sure that
+/* Shift elements right of index(including) start_idx rightward by calling memmove().
+ * This function cannot expand the array if there is not enough memory allocated. Make sure that
  * array->count < array->alloced_count before calling. 
  * Return value:
  * on success: 0,
  * on failure: one of gds generic error codes */
-static int _gds_array_shift_right(GDSArray* array, size_t start_idx);
+static gds_err _gds_array_shift_right(GDSArray* array, size_t start_idx);
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
 
 /* Shift elements right of(including) index start_idx leftward by calling memmove().
  * Return value:
  * on success: 0
  * on failure: one of gds generic error codes */
-static int _gds_array_shift_left(GDSArray* array, size_t start_idx);
+static gds_err _gds_array_shift_left(GDSArray* array, size_t start_idx);
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
 
 /* Invokes array->on_element_removal_func(data) if the field is non-NULL. */
 static void _gds_array_on_element_removal(GDSArray* array, void* data);
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
 
-/* Invokes _gds_array_on_element_removal(GDSArray* array, void* data) for each element starting from start_pos(including)
- * , ending at end_pos (excluding). If start_pos == end_pos, no calls will be performed.
- * Return value:
- * on success: 0,
- * on failure: one of gds generic codes */
-static int _gds_array_on_element_removal_batch(GDSArray* array, size_t start_pos, size_t end_pos);
-
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
-
-int gds_array_init(GDSArray* array, size_t capacity, size_t element_size, void (*on_element_removal_func)(void*))
+gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size, void (*on_element_removal_func)(void*))
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(capacity == 0) return GDS_GEN_ERR_INVALID_ARG(2);
@@ -74,6 +62,8 @@ int gds_array_init(GDSArray* array, size_t capacity, size_t element_size, void (
     return GDS_SUCCESS;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 GDSArray* gds_array_create(size_t capacity, size_t element_size, void (*on_element_removal_func)(void*))
 {
     if((capacity == 0) || (element_size == 0)) return NULL;
@@ -81,15 +71,17 @@ GDSArray* gds_array_create(size_t capacity, size_t element_size, void (*on_eleme
     GDSArray* array = (GDSArray*)malloc(sizeof(GDSArray));
     if(array == NULL) return NULL;
 
-    int init_status = gds_array_init(array, capacity, element_size, on_element_removal_func);
+    gds_err init_status = gds_array_init(array, capacity, element_size, on_element_removal_func);
 
-    if(init_status == 0) return array;
+    if(init_status == GDS_SUCCESS) return array;
     else
     {
         free(array);
         return NULL;
     }
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 void gds_array_destruct(GDSArray* array)
 {
@@ -106,6 +98,8 @@ void gds_array_destruct(GDSArray* array)
     array->_swap_buff = NULL;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 void* gds_array_at(const GDSArray* array, size_t pos)
 {
     if(array == NULL) return NULL;
@@ -114,7 +108,9 @@ void* gds_array_at(const GDSArray* array, size_t pos)
     return array->_data + pos * array->_element_size;
 }
 
-int gds_array_assign(const GDSArray* array, const void* data, size_t pos)
+// ---------------------------------------------------------------------------------------------------------------------
+
+gds_err gds_array_assign(const GDSArray* array, const void* data, size_t pos)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(data == NULL) return GDS_GEN_ERR_INVALID_ARG(2);
@@ -126,6 +122,8 @@ int gds_array_assign(const GDSArray* array, const void* data, size_t pos)
 
     return GDS_SUCCESS;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 gds_err gds_array_swap(const GDSArray* array, size_t pos1, size_t pos2)
 {
@@ -147,12 +145,16 @@ gds_err gds_array_swap(const GDSArray* array, size_t pos1, size_t pos2)
     return GDS_SUCCESS;
 }
 
-int gds_array_push_back(GDSArray* array, const void* data)
+// ---------------------------------------------------------------------------------------------------------------------
+
+gds_err gds_array_push_back(GDSArray* array, const void* data)
 {
     return gds_array_insert_at(array, data, array->_count);
 }
 
-int gds_array_insert_at(GDSArray* array, const void* data, size_t pos)
+// ---------------------------------------------------------------------------------------------------------------------
+
+gds_err gds_array_insert_at(GDSArray* array, const void* data, size_t pos)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(data == NULL) return GDS_GEN_ERR_INVALID_ARG(2);
@@ -162,13 +164,15 @@ int gds_array_insert_at(GDSArray* array, const void* data, size_t pos)
     if(pos < array->_count) _gds_array_shift_right(array, pos);
 
     array->_count++; // it is important to increase the count first, so that the gsd_array_assign() function will work.
-    int assign_op_status = gds_array_assign(array, data, pos);
+    gds_err assign_op_status = gds_array_assign(array, data, pos);
 
     return GDS_SUCCESS;
 
 }
 
-int gds_array_pop_back(GDSArray* array)
+// ---------------------------------------------------------------------------------------------------------------------
+
+gds_err gds_array_pop_back(GDSArray* array)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(array->_count == 0) return GDS_ARR_ERR_ARR_EMPTY;
@@ -178,7 +182,9 @@ int gds_array_pop_back(GDSArray* array)
      return GDS_SUCCESS;
 }
 
-int gds_array_remove_at(GDSArray* array, size_t pos)
+// ---------------------------------------------------------------------------------------------------------------------
+
+gds_err gds_array_remove_at(GDSArray* array, size_t pos)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(pos >= array->_count) return GDS_GEN_ERR_INVALID_ARG(2);
@@ -193,7 +199,9 @@ int gds_array_remove_at(GDSArray* array, size_t pos)
     return GDS_SUCCESS;
 }
 
-int gds_array_empty(GDSArray* array)
+// ---------------------------------------------------------------------------------------------------------------------
+
+gds_err gds_array_empty(GDSArray* array)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
 
@@ -202,14 +210,16 @@ int gds_array_empty(GDSArray* array)
     return GDS_SUCCESS;
 }
 
-int gds_array_realloc(GDSArray* array, size_t new_capacity)
+// ---------------------------------------------------------------------------------------------------------------------
+
+gds_err gds_array_realloc(GDSArray* array, size_t new_capacity)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(new_capacity == 0) return GDS_GEN_ERR_INVALID_ARG(2);
 
     if(new_capacity == array->_capacity) return GDS_SUCCESS;
 
-    if(new_capacity < array->_count) _gds_array_on_element_removal_batch(array, new_capacity, array->_count);
+    while(new_capacity < array->_count) gds_array_pop_back(array); // shrink the array.
 
     void* realloc_status = realloc(array->_data, new_capacity * array->_element_size);
 
@@ -222,44 +232,44 @@ int gds_array_realloc(GDSArray* array, size_t new_capacity)
     return GDS_SUCCESS;
 }
 
-ssize_t gds_array_get_count(const GDSArray* array)
-{
-    if(array == NULL) return -1;
+// ---------------------------------------------------------------------------------------------------------------------
 
-    return array->_count;
+size_t gds_array_get_count(const GDSArray* array)
+{
+    return (array != NULL) ? array->_element_size : 0;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 bool gds_array_is_empty(const GDSArray* array)
 {
-    if(array == NULL) return true;
-
-    return (array->_count == 0);
+    return (array != NULL) ? array->_element_size : true;
 }
 
-ssize_t gds_array_get_capacity(const GDSArray* array)
+// ---------------------------------------------------------------------------------------------------------------------
+
+size_t gds_array_get_capacity(const GDSArray* array)
 {
-    if(array == NULL) return -1;
-
-    return array->_capacity;
+    return (array != NULL) ? array->_element_size : 0;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 size_t gds_array_get_element_size(const GDSArray* array)
 {
-    if(array == NULL) return GDS_SUCCESS;
-
-    return array->_element_size;
+    return (array != NULL) ? array->_element_size : 0;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 size_t gds_array_get_struct_size()
 {
     return sizeof(GDSArray);
 }
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------
 
-static int _gds_array_shift_right(GDSArray* array, size_t start_idx)
+static gds_err _gds_array_shift_right(GDSArray* array, size_t start_idx)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(start_idx >= array->_count) return GDS_GEN_ERR_INVALID_ARG(2);
@@ -275,7 +285,7 @@ static int _gds_array_shift_right(GDSArray* array, size_t start_idx)
     return GDS_SUCCESS;
 }
 
-static int _gds_array_shift_left(GDSArray* array, size_t start_idx)
+static gds_err _gds_array_shift_left(GDSArray* array, size_t start_idx)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(start_idx >= array->_count) return GDS_GEN_ERR_INVALID_ARG(2);
@@ -298,24 +308,4 @@ static void _gds_array_on_element_removal(GDSArray* array, void* data)
     if(array->_on_element_removal_func == NULL) return;
 
     array->_on_element_removal_func(data);
-}
-
-static int _gds_array_on_element_removal_batch(GDSArray* array, size_t start_pos, size_t end_pos)
-{
-    if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(start_pos > end_pos) return GDS_GEN_ERR_INCONSISTENT_ARGS;
-    if((ssize_t)start_pos > (ssize_t)array->_count - 1) return GDS_GEN_ERR_INVALID_ARG(2);
-    if(end_pos > array->_count) return GDS_GEN_ERR_INVALID_ARG(3);
-
-    if(array->_on_element_removal_func == NULL) return GDS_SUCCESS;
-
-    int i;
-    void* curr_element;
-    for(i = start_pos; i < end_pos; i++)
-    {
-        curr_element = gds_array_at(array, i);
-        _gds_array_on_element_removal(array, curr_element);
-    }
-
-    return GDS_SUCCESS;
 }

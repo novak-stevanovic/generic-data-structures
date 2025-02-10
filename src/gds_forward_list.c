@@ -13,31 +13,27 @@
 
 typedef struct _GDSForwardListNodeBase _GDSForwardListNodeBase;
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------
 
 static _GDSForwardListNodeBase* _gds_forward_list_alloc_node(const GDSForwardList* list, const void* data);
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
 
 static _GDSForwardListNodeBase* _gds_forward_list_at_node(const GDSForwardList* list, size_t pos);
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
 
 static void _gds_forward_list_on_node_removal(const GDSForwardList* list, _GDSForwardListNodeBase* node);
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
 
 static size_t _gds_forward_list_get_node_size(const GDSForwardList* list);
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------
 
 static void* _gds_forward_list_get_data_for_node(_GDSForwardListNodeBase* node);
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------
 
 gds_err gds_forward_list_init(GDSForwardList* list, size_t data_size, void (*_on_element_removal_func)(void*))
 {
@@ -56,6 +52,8 @@ gds_err gds_forward_list_init(GDSForwardList* list, size_t data_size, void (*_on
     return GDS_SUCCESS;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 GDSForwardList* gds_forward_list_create(size_t data_size, void (*_on_element_removal_func)(void*))
 {
     if(data_size == 0) return NULL;
@@ -73,6 +71,8 @@ GDSForwardList* gds_forward_list_create(size_t data_size, void (*_on_element_rem
     else return new_list;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 void gds_forward_list_destruct(GDSForwardList* list)
 {
     if(list == NULL) return;
@@ -89,6 +89,8 @@ void gds_forward_list_destruct(GDSForwardList* list)
     list->_swap_buff = NULL;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 void* gds_forward_list_at(const GDSForwardList* list, size_t pos)
 {
     if(list == NULL) return NULL;
@@ -98,6 +100,8 @@ void* gds_forward_list_at(const GDSForwardList* list, size_t pos)
 
     return _gds_forward_list_get_data_for_node(node);
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 gds_err gds_forward_list_assign(const GDSForwardList* list, const void* data, size_t pos)
 {
@@ -110,6 +114,8 @@ gds_err gds_forward_list_assign(const GDSForwardList* list, const void* data, si
 
     return GDS_SUCCESS;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 gds_err gds_forward_list_swap(const GDSForwardList* list, size_t pos1, size_t pos2)
 {
@@ -130,6 +136,8 @@ gds_err gds_forward_list_swap(const GDSForwardList* list, size_t pos1, size_t po
 
     return GDS_SUCCESS;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 gds_err gds_forward_list_push_back(GDSForwardList* list, const void* data)
 {
@@ -155,6 +163,8 @@ gds_err gds_forward_list_push_back(GDSForwardList* list, const void* data)
     return GDS_SUCCESS;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 gds_err gds_forward_list_push_front(GDSForwardList* list, const void* data)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
@@ -179,6 +189,8 @@ gds_err gds_forward_list_push_front(GDSForwardList* list, const void* data)
     return GDS_SUCCESS;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 gds_err gds_forward_list_insert_at(GDSForwardList* list, const void* data, size_t pos)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
@@ -202,6 +214,8 @@ gds_err gds_forward_list_insert_at(GDSForwardList* list, const void* data, size_
     return GDS_SUCCESS;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 gds_err gds_forward_list_pop_front(GDSForwardList* list)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
@@ -219,6 +233,8 @@ gds_err gds_forward_list_pop_front(GDSForwardList* list)
 
     return GDS_SUCCESS;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 gds_err gds_forward_list_remove_at(GDSForwardList* list, size_t pos)
 {
@@ -244,6 +260,8 @@ gds_err gds_forward_list_remove_at(GDSForwardList* list, size_t pos)
     return GDS_SUCCESS;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 gds_err gds_forward_list_empty(GDSForwardList* list)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
@@ -253,12 +271,16 @@ gds_err gds_forward_list_empty(GDSForwardList* list)
     return GDS_SUCCESS;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 bool gds_forward_list_is_empty(const GDSForwardList* list)
 {
     if(list == NULL) return true;
 
     return (list->_count == 0);
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 ssize_t gds_forward_list_get_count(const GDSForwardList* list)
 {
@@ -267,14 +289,14 @@ ssize_t gds_forward_list_get_count(const GDSForwardList* list)
     return list->_count;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 size_t gds_forward_list_get_struct_size()
 {
     return sizeof(GDSForwardList);
 }
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------
 
 static _GDSForwardListNodeBase* _gds_forward_list_alloc_node(const GDSForwardList* list, const void* data)
 {

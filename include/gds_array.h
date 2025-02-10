@@ -25,14 +25,13 @@ typedef struct GDSArray GDSArray;
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
-#ifndef GDS_ENABLE_OPAQUE_STRUCTS
-/* Initializes GDSArray array. Used when opaque structs are disabled.
+/* Initializes GDSArray array. Used when opaque structs are disabled. May also be used
+ * for initializing an array after its destruction.
  * Dynamically allocates capacity * element_size for array's data. 
  * Return value:
  * on success - 0,
- * on failure: one of gds generic error codes. */
+ * on failure: 1.  */
 gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size, void (*on_element_removal_func)(void*));
-#endif // GDS_ENABLE_OPAQUE_STRUCTS
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -117,8 +116,10 @@ gds_err gds_array_empty(GDSArray* array);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+// TODO special doc
 /* Performs a realloc() on array's data, so the new data can fit capacity elements. 
  * If count > capacity, the array will shrink - array->on_element_removal_func() calls will be invoked.
+ * New capacity must be greater than 0.
  * Return value:
  * on success - 0,
  * on failure - one of gds generic error codes or array generic codes. */
@@ -126,11 +127,8 @@ gds_err gds_array_realloc(GDSArray* array, size_t capacity);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Gets current count of elements in array.
- * Return value:
- * on success: current count of elements in array, 
- * on failure: -1 - array is NULL. */
-ssize_t gds_array_get_count(const GDSArray* array);
+/* Gets current count of elements in array. Assumes non-NULL argument. */
+size_t gds_array_get_count(const GDSArray* array);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -141,18 +139,12 @@ bool gds_array_is_empty(const GDSArray* array);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Gets max count of elements in array.
- * Return value:
- * on success: max count of elements in array, 
- * on failure: -1 - array is NULL. */
-ssize_t gds_array_get_capacity(const GDSArray* array);
+/* Gets capacity of array. Assumes non-NULL argument. */
+size_t gds_array_get_capacity(const GDSArray* array);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Returns element size of array.
- * Return value:
- * on success: value greater than 0, representing the value of element_size field in array,
- * on failure: 0 - argument array is NULL. */
+/* Returns element size of array. ASsumes non-NULL argument. */
 size_t gds_array_get_element_size(const GDSArray* array);
 
 // ---------------------------------------------------------------------------------------------------------------------
