@@ -1,8 +1,10 @@
 #ifndef _GDS_VECTOR_H_
 #define _GDS_VECTOR_H_
 
+#include <stdlib.h>
+#include <stdbool.h>
+
 #include "gds.h"
-#include <stddef.h>
 
 #ifdef GDS_ENABLE_OPAQUE_STRUCTS
 struct GDSVector;
@@ -96,7 +98,7 @@ size_t gds_vector_get_count(const GDSVector* vector);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-size_t gds_vector_is_empty(const GDSVector* vector);
+bool gds_vector_is_empty(const GDSVector* vector);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

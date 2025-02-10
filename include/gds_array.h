@@ -1,8 +1,10 @@
 #ifndef _GDS_ARRAY_H_
 #define _GDS_ARRAY_H_
 
-#include "gds.h"
 #include <stdlib.h>
+#include <stdbool.h>
+
+#include "gds.h"
 
 #ifdef GDS_ENABLE_OPAQUE_STRUCTS
 struct GDSArray;
@@ -66,20 +68,27 @@ gds_err gds_array_assign(const GDSArray* array, const void* data, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+/* Swaps the data of elements at pos1 and pos2. 
+ * on success - 0,
+ * on failure - one of gds generic error codes. */
+gds_err gds_array_swap(const GDSArray* array, size_t pos1, size_t pos2);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
 /* Inserts data pointed to by data to index pos in the array. Performs a call to _gds_array_shift_right()
  * to make space for the new element at pos. Performs a call to gds_array_assign() to assign value at the pos index.
  * Return value:
  * on success - 0,
  * on failure - one of gds generic error codes, or array generic codes.*/
-gds_err gds_array_insert(GDSArray* array, const void* data, size_t pos);
+gds_err gds_array_insert_at(GDSArray* array, const void* data, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Appends data pointed to by data to the end of the array. Performs the call: gds_array_insert(array, data, array->count);
+/* Appends data pointed to by data to the end of the array. Performs the call: gds_array_insert_at(array, data, array->count);
  * Return value:
  * on success - 0,
  * on failure - one of gds generic error codes, or array generic codes.*/
-gds_err gds_array_append(GDSArray* array, const void* data);
+gds_err gds_array_push_back(GDSArray* array, const void* data);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -88,11 +97,19 @@ gds_err gds_array_append(GDSArray* array, const void* data);
  * Return value:
  * on success - 0,
  * on failure - one of gds generic error codes, or array generic codes.*/
-gds_err gds_array_remove(GDSArray* array, size_t pos);
+gds_err gds_array_remove_at(GDSArray* array, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Removes last element in array by performing a call: gds_array_remove(array, array->count - 1);
+/* Removes the first element of the array. This is done by performing a call: gds_array_remove_at(array, 0)
+ * Return value:
+ * on success - 0,
+ * on failure - one of gds generic error codes. */
+gds_err gds_array_remove_first(GDSArray* array);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+/* Removes last element in array by performing a call: gds_array_remove_at(array, array->count - 1);
  * Return value:
  * on success - 0,
  * on failure - one of gds generic error codes, or array generic codes.*/
@@ -109,8 +126,7 @@ gds_err gds_array_empty(GDSArray* array);
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Performs a realloc() on array's data, so the new data can fit capacity elements. 
- * If count > capacity, the array will shrink.
- * Keep in mind that this will not perform any calls to array->on_element_removal_func(void*). // TODO
+ * If count > capacity, the array will shrink - array->on_element_removal_func() calls will be invoked.
  * Return value:
  * on success - 0,
  * on failure - one of gds generic error codes or array generic codes. */
@@ -127,10 +143,9 @@ ssize_t gds_array_get_count(const GDSArray* array);
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Checks if the array is empty. 
- * Return value:
- * on success: 0 indicating the array is not empty, 1 indicating the array is empty.
- * on failure: -1 - indicating the passed array argument is NULL. */
-int gds_array_is_empty(const GDSArray* array);
+ * This function doesn't return an error if array == NULL, so the caller must make sure that 'array' argument is non-NULL.
+ * In the case that the user sends a NULL pointer, function returns true. */
+bool gds_array_is_empty(const GDSArray* array);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

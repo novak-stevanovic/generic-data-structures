@@ -6,10 +6,6 @@
 #include "gds.h"
 #include "gds_forward_list.h"
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
-
 #ifdef GDS_ENABLE_OPAQUE_STRUCTS
 #define __GDS_FORWARD_LIST_DEF_ALLOW__
 #include "def/gds_forward_list_def.h"
@@ -29,7 +25,15 @@ static _GDSForwardListNodeBase* _gds_forward_list_at_node(const GDSForwardList* 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
-static void _gds_forward_list_on_removal_node(const GDSForwardList* list, _GDSForwardListNodeBase* node);
+static void _gds_forward_list_on_node_removal(const GDSForwardList* list, _GDSForwardListNodeBase* node);
+
+// ---------------------------------------------------------------------------------------------------------------------------------------
+
+static size_t _gds_forward_list_get_node_size(const GDSForwardList* list);
+
+// ---------------------------------------------------------------------------------------------------------------------------------------
+
+static void* _gds_forward_list_get_data_for_node(_GDSForwardListNodeBase* node);
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -45,6 +49,9 @@ gds_err gds_forward_list_init(GDSForwardList* list, size_t data_size, void (*_on
     list->_tail = NULL;
     list->_data_size = data_size;
     list->_on_element_removal_func = _on_element_removal_func;
+    list->_swap_buff = malloc(data_size);
+    
+    if(list->_swap_buff == NULL) return GDS_FWDLIST_ERR_MALLOC_FAIL;
 
     return GDS_SUCCESS;
 }
@@ -56,9 +63,30 @@ GDSForwardList* gds_forward_list_create(size_t data_size, void (*_on_element_rem
     GDSForwardList* new_list = (GDSForwardList*)malloc(sizeof(GDSForwardList));
     if(new_list == NULL) return NULL;
 
-    gds_forward_list_init(new_list, data_size, _on_element_removal_func);
+    gds_err init_status =gds_forward_list_init(new_list, data_size, _on_element_removal_func);
 
-    return new_list;
+    if(init_status != GDS_SUCCESS)
+    {
+        free(new_list);
+        return NULL;
+    }
+    else return new_list;
+}
+
+void gds_forward_list_destruct(GDSForwardList* list)
+{
+    if(list == NULL) return;
+
+    gds_forward_list_empty(list);
+
+    list->_head = NULL;
+    list->_tail = NULL;
+    list->_data_size = 0;
+    list->_count = 0;
+    list->_on_element_removal_func = NULL;
+
+    free(list->_swap_buff);
+    list->_swap_buff = NULL;
 }
 
 void* gds_forward_list_at(const GDSForwardList* list, size_t pos)
@@ -68,7 +96,7 @@ void* gds_forward_list_at(const GDSForwardList* list, size_t pos)
 
     _GDSForwardListNodeBase* node = _gds_forward_list_at_node(list, pos);
 
-    return node->data;
+    return _gds_forward_list_get_data_for_node(node);
 }
 
 gds_err gds_forward_list_assign(const GDSForwardList* list, const void* data, size_t pos)
@@ -91,12 +119,14 @@ gds_err gds_forward_list_swap(const GDSForwardList* list, size_t pos1, size_t po
 
     if(pos1 == pos2) return GDS_SUCCESS;
 
-    _GDSForwardListNodeBase* node1 = _gds_forward_list_at_node(list, pos1);
-    _GDSForwardListNodeBase* node2 = _gds_forward_list_at_node(list, pos2);
+    _GDSForwardListNodeBase* data1 = gds_forward_list_at(list, pos1);
+    _GDSForwardListNodeBase* data2 = gds_forward_list_at(list, pos2);
 
-    void* node1_data = node1->data;
-    node1->data = node2->data;
-    node2->data = node1_data;
+    size_t data_size = list->_data_size;
+
+    memcpy(list->_swap_buff, data1, data_size);
+    memcpy(data1, data2, data_size);
+    memcpy(data2, list->_swap_buff, data_size);
 
     return GDS_SUCCESS;
 }
@@ -179,7 +209,7 @@ gds_err gds_forward_list_pop_front(GDSForwardList* list)
 
     _GDSForwardListNodeBase* next_head = list->_head->next;
 
-    _gds_forward_list_on_removal_node(list, list->_head);
+    _gds_forward_list_on_node_removal(list, list->_head);
 
     list->_head = next_head;
     
@@ -204,7 +234,7 @@ gds_err gds_forward_list_remove_at(GDSForwardList* list, size_t pos)
         if(prev->next == list->_tail)
             list->_tail = prev;
 
-        _gds_forward_list_on_removal_node(list, prev->next);
+        _gds_forward_list_on_node_removal(list, prev->next);
         prev->next = next_next;
 
 
@@ -224,6 +254,22 @@ gds_err gds_forward_list_remove_last(GDSForwardList* list)
     return GDS_SUCCESS;
 }
 
+gds_err gds_forward_list_empty(GDSForwardList* list)
+{
+    if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
+
+    while(list->_count != 0) gds_forward_list_pop_front(list);
+
+    return GDS_SUCCESS;
+}
+
+bool gds_forward_list_is_empty(const GDSForwardList* list)
+{
+    if(list == NULL) return true;
+
+    return (list->_count == 0);
+}
+
 ssize_t gds_forward_list_get_count(const GDSForwardList* list)
 {
     if(list == NULL) return -1;
@@ -240,13 +286,6 @@ size_t gds_forward_list_get_struct_size()
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
-static size_t _gds_forward_list_get_node_size(const GDSForwardList* list)
-{
-    assert(list != NULL);
-
-    return (sizeof(_GDSForwardListNodeBase) + list->_data_size);
-}
-
 static _GDSForwardListNodeBase* _gds_forward_list_alloc_node(const GDSForwardList* list, const void* data)
 {
     assert(list != NULL);
@@ -255,17 +294,9 @@ static _GDSForwardListNodeBase* _gds_forward_list_alloc_node(const GDSForwardLis
     _GDSForwardListNodeBase* new = (_GDSForwardListNodeBase*)malloc(_gds_forward_list_get_node_size(list));
     if(new == NULL) return NULL;
 
-    new->data = malloc(list->_data_size);
-    if(new->data == NULL)
-    {
-        free(new);
-        return NULL;
-    }
-    else
-    {
-        new->next = NULL;
-        memcpy(new->data, data, list->_data_size);
-    }
+    void* node_data = _gds_forward_list_get_data_for_node(new);
+
+    memcpy(node_data, data, list->_data_size);
 
     return new;
 }
@@ -282,44 +313,25 @@ static _GDSForwardListNodeBase* _gds_forward_list_at_node(const GDSForwardList* 
     return it;
 }
 
-static void _gds_forward_list_on_removal_node(const GDSForwardList* list, _GDSForwardListNodeBase* node)
+static void _gds_forward_list_on_node_removal(const GDSForwardList* list, _GDSForwardListNodeBase* node)
 {
     assert(list != NULL);
     assert(node != NULL);
 
-    free(node->data);
-    if(list->_on_element_removal_func != NULL) list->_on_element_removal_func(node->data);
+    void* node_data = _gds_forward_list_get_data_for_node(node);
+    if(list->_on_element_removal_func != NULL) list->_on_element_removal_func(node_data);
 }
 
-void _debug_print_my_list(GDSForwardList* list, int verbose)
+static size_t _gds_forward_list_get_node_size(const GDSForwardList* list)
 {
-    if(verbose)
-    {
-        printf("PRINTING LIST: %p\n", list);
-        printf("H: %p T: %p C: %ld\n", list->_head, list->_tail, list->_count);
-        int i;
-        _GDSForwardListNodeBase* at_ret;
-        int* data;
-        for(i = 0; i < gds_forward_list_get_count(list); i++)
-        {
-            at_ret = _gds_forward_list_at_node(list, i);
-            assert(at_ret != NULL);
-            data = (int*)at_ret->data;
-            printf("%d: %p %d %p\t", i, at_ret, *data, at_ret->next);
-        }
-        putchar('\n');
-        putchar('\n');
-        putchar('\n');
-    }
-    else
-    {
-        int i;
-        _GDSForwardListNodeBase* at_ret;
-        for(i = 0; i < gds_forward_list_get_count(list); i++)
-        {
-            at_ret = gds_forward_list_at(list, i);
-            printf("%d ", *(int*)at_ret);
-        }
-        putchar('\n');
-    }
+    assert(list != NULL);
+
+    return (sizeof(_GDSForwardListNodeBase) + list->_data_size);
+}
+
+static void* _gds_forward_list_get_data_for_node(_GDSForwardListNodeBase* node)
+{
+    assert(node != NULL);
+
+    return (((void*)node) + sizeof(_GDSForwardListNodeBase*));
 }

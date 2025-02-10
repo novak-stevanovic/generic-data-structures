@@ -38,7 +38,7 @@ typedef int gds_err;
 found in the corresponding .c files. However, if the user wishes for more control, he may want to make the 
 structs not opaque. This can be done by commenting the macro below (GDS_ENABLE_OPAQUE_STRUCTS). */
 
-#define GDS_ENABLE_OPAQUE_STRUCTS
+// #define GDS_ENABLE_OPAQUE_STRUCTS
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 

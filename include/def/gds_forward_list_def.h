@@ -14,7 +14,6 @@
 struct _GDSForwardListNodeBase
 {
     struct _GDSForwardListNodeBase* next;
-    void* data;
 };
 
 struct GDSForwardList
@@ -30,6 +29,7 @@ struct GDSForwardList
         // - The node may store pointers to dynamically allocated objects. This function can be used 
         //   to properly free the dynamically allocated memory.
     
+    void* _swap_buff;
 };
 
 #endif // __GDS_FORWARD_LIST_DEF_H__

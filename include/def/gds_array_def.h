@@ -23,6 +23,7 @@ struct GDSArray
         //   to properly free the memory of elements removed from the array.
         // - In this case, the `void*` parameter represents a pointer to an element inside the array,
         //   which itself is a pointer to a dynamically allocated object */
+    void* _swap_buff;
 };
 
 #endif
