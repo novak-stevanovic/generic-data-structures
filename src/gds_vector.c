@@ -2,6 +2,7 @@
 #include "gds_vector.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include "gds_array.h"
 
 #ifdef GDS_ENABLE_OPAQUE_STRUCTS
@@ -10,6 +11,8 @@
 #endif
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
+
+size_t _gds_vector_get_min_size(const GDSVector* vector);
 
 static bool _gds_vector_should_vector_shrink(const GDSVector* vector);
 
@@ -38,7 +41,9 @@ gds_err gds_vector_init(GDSVector* vector,
         return GDS_FAILURE;
     }
 
-    else return GDS_SUCCESS;
+    vector->_get_next_chunk_size_func = get_next_chunk_size_func;
+
+    return GDS_SUCCESS;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -220,8 +225,16 @@ gds_err gds_vector_fit(GDSVector* vector)
 
     GDSArray* vector_data = &vector->_data;
 
-    size_t shrink_amount = (vector_data->_capacity - vector_data->_count);
-    _gds_vector_chunk_list_shrink_by(&vector->_chunks, shrink_amount);
+    size_t min_size = _gds_vector_get_min_size(vector);
+    size_t required_size = (vector_data->_count > min_size) ? vector_data->_count : min_size;
+    size_t shrink_amount = (vector_data->_capacity - required_size);
+
+    ssize_t expansion_amount = -((ssize_t)shrink_amount);
+
+    gds_err alloc_status = _gds_vector_allocate(vector, expansion_amount);
+
+    if(alloc_status == GDS_VEC_ERR_REALLOC_FAIL) return GDS_VEC_ERR_REALLOC_FAIL;
+    else if(alloc_status == GDS_GEN_ERR_INVALID_ARG(3)) assert(1 != 1);
 
     return GDS_SUCCESS;
 }
@@ -263,13 +276,20 @@ size_t gds_vector_get_struct_size()
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
+size_t _gds_vector_get_min_size(const GDSVector* vector)
+{
+    assert(vector != NULL);
+
+    return _gds_vector_chunk_list_get_min_size(&vector->_chunks);
+}
+
 static bool _gds_vector_should_vector_shrink(const GDSVector* vector)
 {
     if(vector == NULL) return false;
 
     const GDSArray* vector_data = &vector->_data;
 
-    return (vector_data->_count <= (vector_data->_capacity - _gds_vector_chunk_list_get_last_chunk_size(&vector->_chunks)));
+    return (vector_data->_count <= (vector_data->_capacity - _gds_vector_chunk_list_get_min_size(&vector->_chunks)));
 }
 
 static gds_err _gds_vector_allocate(GDSVector* vector, ssize_t size_diff)
@@ -291,13 +311,13 @@ static gds_err _gds_vector_allocate(GDSVector* vector, ssize_t size_diff)
     {
         _GDSVectorChunkList* chunk_list = &vector->_chunks;
 
-        size_t max_shrink = current_capacity - _gds_vector_chunk_list_get_last_chunk_size(chunk_list); // min_capacity
+        size_t max_shrink = current_capacity - _gds_vector_chunk_list_get_min_size(chunk_list); // min_capacity
         if((-size_diff) > max_shrink) return GDS_GEN_ERR_INVALID_ARG(3); 
 
         gds_err realloc_status = gds_array_realloc(vector_data, current_capacity + size_diff);
         if(realloc_status != GDS_SUCCESS) return GDS_VEC_ERR_REALLOC_FAIL;
 
-        _gds_vector_chunk_list_shrink_by(chunk_list, size_diff);
+        _gds_vector_chunk_list_shrink_by(chunk_list, -size_diff);
     }
 
     return GDS_SUCCESS;

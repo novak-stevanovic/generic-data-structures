@@ -74,3 +74,23 @@ size_t _gds_vector_chunk_list_get_last_chunk_size(const _GDSVectorChunkList* chu
 {
     return (*(size_t*)gds_forward_list_at(&chunk_list->_list, 0));
 }
+
+size_t _gds_vector_chunk_list_get_min_size(const _GDSVectorChunkList* chunk_list)
+{
+    return (*(size_t*)gds_forward_list_at(&chunk_list->_list,
+                gds_forward_list_get_count(&chunk_list->_list) - 1));
+}
+
+size_t __gds_vector_chunk_list_get_sum(const _GDSVectorChunkList* chunk_list)
+{
+    int i;
+    void* curr_el_data;
+    int sum = 0;
+    for(i = 0; i < chunk_list->_list._count; i++)
+    {
+        curr_el_data = gds_forward_list_at(&chunk_list->_list, i);
+        sum += *(size_t*)curr_el_data;
+    }
+
+    return sum;
+}

@@ -26,7 +26,10 @@ void _gds_vector_chunk_list_shrink_by(_GDSVectorChunkList* chunk_list, size_t am
 
 gds_err _gds_vector_chunk_list_add_new_chunk(_GDSVectorChunkList* chunk_list, size_t new_chunk_amount);
 
-// Function assumes that there are existing chunks in the chunk list.
+// Function assumes that there are existing chunks in the chunk list and chunk list is not NULL.
 size_t _gds_vector_chunk_list_get_last_chunk_size(const _GDSVectorChunkList* chunk_list);
+
+// Function assumes that there are existing chunks in the chunk list and chunk list is not NULL.
+size_t _gds_vector_chunk_list_get_min_size(const _GDSVectorChunkList* chunk_list);
 
 #endif //__GDS_VECTOR_CHUNK_LIST_H__

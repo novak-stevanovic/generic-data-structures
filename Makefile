@@ -8,7 +8,7 @@ CC = gcc
 
 C_SRC = $(shell find src -name "*.c")
 C_OBJ = $(patsubst src/%.c,build/%.o,$(C_SRC))
-
+ 
 BASE_C_FLAGS = -c -Wall -Iinclude -fPIC -MMD -MP
 
 define get_complete_base_cflags

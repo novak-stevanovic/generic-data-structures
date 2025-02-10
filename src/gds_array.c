@@ -236,7 +236,7 @@ gds_err gds_array_realloc(GDSArray* array, size_t new_capacity)
 
 size_t gds_array_get_count(const GDSArray* array)
 {
-    return (array != NULL) ? array->_element_size : 0;
+    return (array != NULL) ? array->_count : 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -250,7 +250,7 @@ bool gds_array_is_empty(const GDSArray* array)
 
 size_t gds_array_get_capacity(const GDSArray* array)
 {
-    return (array != NULL) ? array->_element_size : 0;
+    return (array != NULL) ? array->_capacity : 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

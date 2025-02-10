@@ -318,11 +318,15 @@ static _GDSForwardListNodeBase* _gds_forward_list_at_node(const GDSForwardList* 
     assert(list != NULL);
     assert(pos < list->_count);
 
-    _GDSForwardListNodeBase* it = list->_head;
-    size_t i;
-    for(i = 0; i < pos; i++) it = it->next;
+    if(pos == (list->_count - 1)) return list->_tail;
+    else
+    {
+        _GDSForwardListNodeBase* it = list->_head;
+        size_t i;
+        for(i = 0; i < pos; i++) it = it->next;
+        return it;
+    }
 
-    return it;
 }
 
 static void _gds_forward_list_on_node_removal(const GDSForwardList* list, _GDSForwardListNodeBase* node)
