@@ -168,6 +168,16 @@ int gds_array_insert_at(GDSArray* array, const void* data, size_t pos)
 
 }
 
+int gds_array_pop_back(GDSArray* array)
+{
+    if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
+    if(array->_count == 0) return GDS_ARR_ERR_ARR_EMPTY;
+
+     gds_array_remove_at(array, array->_count - 1);
+
+     return GDS_SUCCESS;
+}
+
 int gds_array_remove_at(GDSArray* array, size_t pos)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
@@ -183,29 +193,11 @@ int gds_array_remove_at(GDSArray* array, size_t pos)
     return GDS_SUCCESS;
 }
 
-int gds_array_remove_first(GDSArray* array)
-{
-    if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(array->_count == 0) return GDS_ARR_ERR_ARR_EMPTY;
-
-    return gds_array_remove_at(array, 0);
-}
-
-int gds_array_pop(GDSArray* array)
-{
-    if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(array->_count == 0) return GDS_ARR_ERR_ARR_EMPTY;
-
-     gds_array_remove_at(array, array->_count - 1);
-
-     return GDS_SUCCESS;
-}
-
 int gds_array_empty(GDSArray* array)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
 
-    while(array->_count != 0) gds_array_pop(array);
+    while(array->_count != 0) gds_array_pop_back(array);
 
     return GDS_SUCCESS;
 }

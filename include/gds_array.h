@@ -75,20 +75,20 @@ gds_err gds_array_swap(const GDSArray* array, size_t pos1, size_t pos2);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+/* Appends data pointed to by data to the end of the array. Performs the call: gds_array_insert_at(array, data, array->count);
+ * Return value:
+ * on success - 0,
+ * on failure - one of gds generic error codes, or array generic codes.*/
+gds_err gds_array_push_back(GDSArray* array, const void* data);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
 /* Inserts data pointed to by data to index pos in the array. Performs a call to _gds_array_shift_right()
  * to make space for the new element at pos. Performs a call to gds_array_assign() to assign value at the pos index.
  * Return value:
  * on success - 0,
  * on failure - one of gds generic error codes, or array generic codes.*/
 gds_err gds_array_insert_at(GDSArray* array, const void* data, size_t pos);
-
-// ---------------------------------------------------------------------------------------------------------------------
-
-/* Appends data pointed to by data to the end of the array. Performs the call: gds_array_insert_at(array, data, array->count);
- * Return value:
- * on success - 0,
- * on failure - one of gds generic error codes, or array generic codes.*/
-gds_err gds_array_push_back(GDSArray* array, const void* data);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -101,19 +101,11 @@ gds_err gds_array_remove_at(GDSArray* array, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Removes the first element of the array. This is done by performing a call: gds_array_remove_at(array, 0)
- * Return value:
- * on success - 0,
- * on failure - one of gds generic error codes. */
-gds_err gds_array_remove_first(GDSArray* array);
-
-// ---------------------------------------------------------------------------------------------------------------------
-
 /* Removes last element in array by performing a call: gds_array_remove_at(array, array->count - 1);
  * Return value:
  * on success - 0,
  * on failure - one of gds generic error codes, or array generic codes.*/
-gds_err gds_array_pop(GDSArray* array);
+gds_err gds_array_pop_back(GDSArray* array);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

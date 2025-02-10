@@ -1,7 +1,7 @@
 #ifndef GDS_H
 #define GDS_H
 
-// TODO add restrict
+// TODO add restrict to func params and inline to func signatures
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 

@@ -244,16 +244,6 @@ gds_err gds_forward_list_remove_at(GDSForwardList* list, size_t pos)
     return GDS_SUCCESS;
 }
 
-gds_err gds_forward_list_remove_last(GDSForwardList* list)
-{
-    if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(list->_count == 0) return GDS_FWDLIST_ERR_FLIST_EMPTY;
-
-    gds_forward_list_remove_at(list, list->_count - 1);
-
-    return GDS_SUCCESS;
-}
-
 gds_err gds_forward_list_empty(GDSForwardList* list)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
