@@ -14,7 +14,7 @@
 struct GDSArray
 {
     size_t _count; // current count of elements,
-    size_t _max_count; // array capacity,
+    size_t _capacity; // array capacity,
     size_t _element_size; // size of each element,
     void* _data; // address of array's data beginning.
     void (*_on_element_removal_func)(void*); // pointer to a callback function that is called on element removal, for each removed element.

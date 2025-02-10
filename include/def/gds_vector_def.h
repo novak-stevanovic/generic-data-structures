@@ -20,7 +20,7 @@ struct GDSVector
     struct GDSArray _data;
 
     struct GDSForwardList _chunks;
-    size_t (*_get_next_chunk_size)(struct GDSVector*, void*);
+    size_t (*_get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size);
 };
 
 #endif // __GDS_VECTOR_DEF_H__

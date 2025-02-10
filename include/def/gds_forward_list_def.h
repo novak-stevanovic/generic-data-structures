@@ -14,6 +14,7 @@
 struct _GDSForwardListNodeBase
 {
     struct _GDSForwardListNodeBase* next;
+    void* data;
 };
 
 struct GDSForwardList
@@ -25,9 +26,9 @@ struct GDSForwardList
     size_t _data_size;
 
     void (*_on_element_removal_func)(void*); // pointer to a callback function that is called on element removal, for each removed element.
-        // void* parameter - a pointer to the 'data' part of a list element.
-        // - The data may store pointers to dynamically allocated objects. This function can be used 
-        //   to properly free the memory of elements removed from the array.
+        // void* parameter - address of data in node.
+        // - The node may store pointers to dynamically allocated objects. This function can be used 
+        //   to properly free the dynamically allocated memory.
     
 };
 

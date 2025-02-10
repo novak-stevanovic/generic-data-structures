@@ -21,15 +21,7 @@ typedef struct _GDSForwardListNodeBase _GDSForwardListNodeBase;
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
-static size_t _gds_forward_list_get_node_size(const GDSForwardList* list);
-
-// ---------------------------------------------------------------------------------------------------------------------------------------
-
-static _GDSForwardListNodeBase* _gds_forward_list_alloc(const GDSForwardList* list, const void* data);
-
-// ---------------------------------------------------------------------------------------------------------------------------------------
-
-static void* _gds_forward_list_get_data_for_node(_GDSForwardListNodeBase* node);
+static _GDSForwardListNodeBase* _gds_forward_list_alloc_node(const GDSForwardList* list, const void* data);
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
@@ -76,7 +68,7 @@ void* gds_forward_list_at(const GDSForwardList* list, size_t pos)
 
     _GDSForwardListNodeBase* node = _gds_forward_list_at_node(list, pos);
 
-    return _gds_forward_list_get_data_for_node(node);
+    return node->data;
 }
 
 gds_err gds_forward_list_assign(const GDSForwardList* list, const void* data, size_t pos)
@@ -96,19 +88,15 @@ gds_err gds_forward_list_swap(const GDSForwardList* list, size_t pos1, size_t po
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(pos1 >= list->_count) return GDS_GEN_ERR_INVALID_ARG(2);
     if(pos2 >= list->_count) return GDS_GEN_ERR_INVALID_ARG(3);
+
     if(pos1 == pos2) return GDS_SUCCESS;
 
-    void* addr1 = gds_forward_list_at(list, pos1);
-    void* addr2 = gds_forward_list_at(list, pos2);
+    _GDSForwardListNodeBase* node1 = _gds_forward_list_at_node(list, pos1);
+    _GDSForwardListNodeBase* node2 = _gds_forward_list_at_node(list, pos2);
 
-    void* addr1_data_buff = malloc(_gds_forward_list_get_node_size(list));
-    if(addr1_data_buff == NULL) return GDS_FLIST_ERR_MALLOC_FAIL;
-    memcpy(addr1_data_buff, addr1, list->_data_size);
-
-    gds_forward_list_assign(list, addr2, pos1);
-    gds_forward_list_assign(list, addr1_data_buff, pos2);
-
-    free(addr1_data_buff);
+    void* node1_data = node1->data;
+    node1->data = node2->data;
+    node2->data = node1_data;
 
     return GDS_SUCCESS;
 }
@@ -118,8 +106,8 @@ gds_err gds_forward_list_push_back(GDSForwardList* list, const void* data)
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(data == NULL) return GDS_GEN_ERR_INVALID_ARG(2);
 
-    _GDSForwardListNodeBase* new = _gds_forward_list_alloc(list, data);
-    if(new == NULL) return GDS_FLIST_ERR_MALLOC_FAIL;
+    _GDSForwardListNodeBase* new = _gds_forward_list_alloc_node(list, data);
+    if(new == NULL) return GDS_FWDLIST_ERR_MALLOC_FAIL;
 
     if(list->_count == 0)
     {
@@ -142,8 +130,8 @@ gds_err gds_forward_list_push_front(GDSForwardList* list, const void* data)
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(data == NULL) return GDS_GEN_ERR_INVALID_ARG(2);
 
-    _GDSForwardListNodeBase* new = _gds_forward_list_alloc(list, data);
-    if(new == NULL) return GDS_FLIST_ERR_MALLOC_FAIL;
+    _GDSForwardListNodeBase* new = _gds_forward_list_alloc_node(list, data);
+    if(new == NULL) return GDS_FWDLIST_ERR_MALLOC_FAIL;
 
     if(list->_count == 0)
     {
@@ -171,12 +159,12 @@ gds_err gds_forward_list_insert_at(GDSForwardList* list, const void* data, size_
     else if(pos == 0) gds_forward_list_push_front(list, data);
     else
     {
-        _GDSForwardListNodeBase* new = _gds_forward_list_alloc(list, data);
-        if(new == NULL) return GDS_FLIST_ERR_MALLOC_FAIL;
+        _GDSForwardListNodeBase* new = _gds_forward_list_alloc_node(list, data);
+        if(new == NULL) return GDS_FWDLIST_ERR_MALLOC_FAIL;
 
         _GDSForwardListNodeBase* previous = _gds_forward_list_at_node(list, pos - 1);
 
-        new->next = previous->next->next;
+        new->next = previous->next;
         previous->next = new;
         list->_count++;
     }
@@ -187,12 +175,11 @@ gds_err gds_forward_list_insert_at(GDSForwardList* list, const void* data, size_
 gds_err gds_forward_list_pop_front(GDSForwardList* list)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(list->_count == 0) return GDS_FLIST_ERR_FLIST_EMPTY;
+    if(list->_count == 0) return GDS_FWDLIST_ERR_FLIST_EMPTY;
 
     _GDSForwardListNodeBase* next_head = list->_head->next;
 
     _gds_forward_list_on_removal_node(list, list->_head);
-    free(list->_head);
 
     list->_head = next_head;
     
@@ -218,19 +205,19 @@ gds_err gds_forward_list_remove_at(GDSForwardList* list, size_t pos)
             list->_tail = prev;
 
         _gds_forward_list_on_removal_node(list, prev->next);
-        free(prev->next);
         prev->next = next_next;
 
 
         list->_count--;
     }
+
     return GDS_SUCCESS;
 }
 
 gds_err gds_forward_list_remove_last(GDSForwardList* list)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(list->_count == 0) return GDS_FLIST_ERR_FLIST_EMPTY;
+    if(list->_count == 0) return GDS_FWDLIST_ERR_FLIST_EMPTY;
 
     gds_forward_list_remove_at(list, list->_count - 1);
 
@@ -244,6 +231,11 @@ ssize_t gds_forward_list_get_count(const GDSForwardList* list)
     return list->_count;
 }
 
+size_t gds_forward_list_get_struct_size()
+{
+    return sizeof(GDSForwardList);
+}
+
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -255,7 +247,7 @@ static size_t _gds_forward_list_get_node_size(const GDSForwardList* list)
     return (sizeof(_GDSForwardListNodeBase) + list->_data_size);
 }
 
-static _GDSForwardListNodeBase* _gds_forward_list_alloc(const GDSForwardList* list, const void* data)
+static _GDSForwardListNodeBase* _gds_forward_list_alloc_node(const GDSForwardList* list, const void* data)
 {
     assert(list != NULL);
     assert(data != NULL);
@@ -263,17 +255,19 @@ static _GDSForwardListNodeBase* _gds_forward_list_alloc(const GDSForwardList* li
     _GDSForwardListNodeBase* new = (_GDSForwardListNodeBase*)malloc(_gds_forward_list_get_node_size(list));
     if(new == NULL) return NULL;
 
-    new->next = NULL;
-    memcpy(_gds_forward_list_get_data_for_node(new), data, list->_data_size);
+    new->data = malloc(list->_data_size);
+    if(new->data == NULL)
+    {
+        free(new);
+        return NULL;
+    }
+    else
+    {
+        new->next = NULL;
+        memcpy(new->data, data, list->_data_size);
+    }
 
     return new;
-}
-
-static void* _gds_forward_list_get_data_for_node(_GDSForwardListNodeBase* node)
-{
-    assert(node != NULL);
-
-    return ((void*)node + sizeof(_GDSForwardListNodeBase*));
 }
 
 static _GDSForwardListNodeBase* _gds_forward_list_at_node(const GDSForwardList* list, size_t pos)
@@ -293,7 +287,8 @@ static void _gds_forward_list_on_removal_node(const GDSForwardList* list, _GDSFo
     assert(list != NULL);
     assert(node != NULL);
 
-    if(list->_on_element_removal_func != NULL) list->_on_element_removal_func(_gds_forward_list_get_data_for_node(node));
+    free(node->data);
+    if(list->_on_element_removal_func != NULL) list->_on_element_removal_func(node->data);
 }
 
 void _debug_print_my_list(GDSForwardList* list, int verbose)
@@ -309,7 +304,7 @@ void _debug_print_my_list(GDSForwardList* list, int verbose)
         {
             at_ret = _gds_forward_list_at_node(list, i);
             assert(at_ret != NULL);
-            data = _gds_forward_list_get_data_for_node(at_ret);
+            data = (int*)at_ret->data;
             printf("%d: %p %d %p\t", i, at_ret, *data, at_ret->next);
         }
         putchar('\n');
