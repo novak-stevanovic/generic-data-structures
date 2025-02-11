@@ -8,18 +8,22 @@
 
 #ifdef GDS_ENABLE_OPAQUE_STRUCTS
 struct GDSForwardList;
+struct GDSForwardListIterator;
 #else
 #define __GDS_FORWARD_LIST_DEF_ALLOW__
 #include "def/gds_forward_list_def.h"
 #endif
 
 typedef struct GDSForwardList GDSForwardList;
+typedef struct GDSForwardListIterator GDSForwardListIterator;
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
 #define GDS_FWDLIST_ERR_BASE 2100
 #define GDS_FWDLIST_ERR_LIST_EMPTY 2101
 #define GDS_FWDLIST_ERR_MALLOC_FAIL 2102
+
+#define GDS_FWDLIST_ITER_ERR_OUT_OF_BOUNDS 2103
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -155,6 +159,53 @@ bool gds_forward_list_is_empty(const GDSForwardList* list);
 
 /* Performs sizeof(GDSForwardList) and returns the value. */
 size_t gds_forward_list_get_struct_size();
+
+// ------------------------------------------------------------------------------------------------------------------------------------------
+
+/* Initializes the GDSForwardList iterator. The iterator will point at the first element of the list.
+ * Return value:
+ * on success: GDS_SUCCESS,
+ * on failure: one of the generic error codes representing invalid arguments(if 'list' or 'iterator' is NULL.)
+ * or GDS_FWDLIST_ERR_LIST_EMPTY. */
+gds_err gds_forward_list_iterator_init(GDSForwardList* list, GDSForwardListIterator* iterator);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+/* Dynamically allocates memory for the iterator and invokes gds_forward_list_iterator_init() to initialize it.
+ * The caller is responsible for freeing the dynamically allocated memory for the GDSForwardListIterator after
+ * using it.
+ * Return value:
+ * on success: address of the newly allocated GDSForwardListIterator,
+ * on failure: NULL.
+ * Function may fail if 'list' is NULL, allocation for GDSForwardListIterator fails, or if the call to
+ * gds_forward_list_iterator_init() function fails. */
+GDSForwardListIterator* gds_forward_list_iterator_create(GDSForwardList* list);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+/* Moves iterator to the next GDSForwardList node. 
+ * Return value: 
+ * on success: GDS_SUCCESS,
+ * on failure: one of the generic error codes representing invalid arguments or GDS_FWDLIST_ITER_ERR_OUT_OF_BOUNDS.
+ * Function may fail if 'iterator' is NULL or the iterator is at the end of the list.
+ * Function may also return GDS_FAILURE if the program is an undefined state - if iterator is pointing at a NULL node. */
+gds_err gds_forward_list_iterator_next(GDSForwardListIterator* iterator);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+/* Checks if the iterator has a next node to move to. The iterator doesn't have a next node when pointing to the end
+ * of a list. Function assumes non-NULL 'iterator' */
+bool gds_forward_list_iterator_has_next(GDSForwardListIterator* iterator);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+/* Retrieves the data of the GDSForwardList node the iterator is pointing at. Function assumes non-NULL 'iterator' */
+void* gds_forward_list_iterator_get_data(GDSForwardListIterator* iterator);
+
+// ------------------------------------------------------------------------------------------------------------------------------------------
+
+/* Retrieves the position of the GDSForwardList node the iterator is pointing at. Function assumes non-NULL 'iterator' */
+size_t gds_forward_list_iterator_get_pos(GDSForwardListIterator* iterator);
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 

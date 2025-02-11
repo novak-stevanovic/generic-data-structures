@@ -32,4 +32,10 @@ struct GDSForwardList
     void* _swap_buff;
 };
 
+struct GDSForwardListIterator
+{
+    struct _GDSForwardListNodeBase* _curr_node;
+    size_t _pos;
+};
+
 #endif // __GDS_FORWARD_LIST_DEF_H__

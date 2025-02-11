@@ -5,7 +5,7 @@
 
 #ifndef __GDS_VECTOR_DEF_ALLOW__
 #error "Do not include directly."
-#endif // __GDS_VECTOR__DEF__ALLOW__
+#endif // __GDS_VECTOR_DEF_ALLOW__
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 

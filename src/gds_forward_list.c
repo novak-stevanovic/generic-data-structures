@@ -263,7 +263,6 @@ gds_err gds_forward_list_remove_at(GDSForwardList* list, size_t pos)
         _gds_forward_list_on_node_removal(list, prev->next);
         prev->next = next_next;
 
-
         list->_count--;
     }
 
@@ -309,6 +308,86 @@ size_t gds_forward_list_get_data_size(const GDSForwardList* list)
 size_t gds_forward_list_get_struct_size()
 {
     return sizeof(GDSForwardList);
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------
+
+/* Initializes the GDSForwardList iterator. The iterator will point at the first element of the list.
+ * Return value:
+ * on success: GDS_SUCCESS,
+ * on failure: one of the generic error codes representing invalid arguments(if 'list' or 'iterator' is NULL.)
+ * or GDS_FWDLIST_ERR_LIST_EMPTY. */
+gds_err gds_forward_list_iterator_init(GDSForwardList* list, GDSForwardListIterator* iterator)
+{
+    if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
+    if(iterator == NULL) return GDS_GEN_ERR_INVALID_ARG(2);
+
+    if(list->_count == 0) return GDS_FWDLIST_ERR_LIST_EMPTY;
+
+    iterator->_curr_node = list->_head;
+    iterator->_pos = 0;
+
+    return GDS_SUCCESS;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+GDSForwardListIterator* gds_forward_list_iterator_create(GDSForwardList* list)
+{
+    if(list == NULL) return NULL;
+
+    GDSForwardListIterator* iterator = (GDSForwardListIterator*)malloc(sizeof(GDSForwardListIterator));
+    if(iterator == NULL) return NULL;
+
+    gds_err init_status = gds_forward_list_iterator_init(list, iterator);
+    
+    if(init_status != GDS_SUCCESS)
+    {
+        free(iterator);
+        return NULL;
+    }
+    else return iterator;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+gds_err gds_forward_list_iterator_next(GDSForwardListIterator* iterator)
+{
+    if(iterator == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
+    if(iterator->_curr_node == NULL) GDS_FAILURE;
+
+    _GDSForwardListNodeBase* next_node = iterator->_curr_node->next;
+    if(next_node == NULL) return GDS_FWDLIST_ITER_ERR_OUT_OF_BOUNDS;
+    else
+    {
+        iterator->_curr_node = next_node;
+        iterator->_pos += 1;
+        return GDS_SUCCESS;
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+bool gds_forward_list_iterator_has_next(GDSForwardListIterator* iterator)
+{
+    if(iterator == NULL) return false;
+
+    return (iterator->_curr_node->next != NULL);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+void* gds_forward_list_iterator_get_data(GDSForwardListIterator* iterator)
+{
+    return (iterator != NULL) ? _gds_forward_list_get_data_for_node(iterator->_curr_node) : NULL;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------
+
+/* Retrieves the position of the GDSForwardList node the iterator is pointing at. Function assumes non-NULL 'iterator' */
+size_t gds_forward_list_iterator_get_pos(GDSForwardListIterator* iterator)
+{
+    return (iterator != NULL) ? iterator->_pos : 0;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------

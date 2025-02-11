@@ -22,6 +22,7 @@ typedef struct GDSVector GDSVector;
 #define GDS_VEC_ERR_MALLOC_FAIL 3002
 #define GDS_VEC_ERR_REALLOC_FAIL 3003
 #define GDS_VEC_ERR_INIT_FAIL 3004
+#define GDS_VEC_ERR_CHUNK_GEN_FUNC_FAIL 3005 // Occurs when vector->_get_next_chunk_size_func returns 0
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -173,8 +173,10 @@ gds_err gds_vector_insert_at(GDSVector* vector, const void* data, size_t pos)
     if(vector_data->_capacity == vector_data->_count)
     {
         size_t new_chunk_size = vector->_get_next_chunk_size_func(vector, _gds_vector_chunk_list_get_last_chunk_size(&vector->_chunks));
+        if(new_chunk_size == 0) return GDS_VEC_ERR_CHUNK_GEN_FUNC_FAIL;
+
         gds_err prealloc_status = gds_vector_prealloc(vector, new_chunk_size);
-        if(prealloc_status != GDS_SUCCESS) return GDS_VEC_ERR_REALLOC_FAIL; // TODO
+        if(prealloc_status != GDS_SUCCESS) return GDS_VEC_ERR_REALLOC_FAIL;
     }
 
     gds_array_insert_at(vector_data, data, pos);
@@ -316,6 +318,7 @@ static bool _gds_vector_should_vector_shrink(const GDSVector* vector)
 
     return (vector_data->_count <= (vector_data->_capacity - _gds_vector_chunk_list_get_min_size(&vector->_chunks)));
 }
+
 static gds_err _gds_vector_allocate(GDSVector* vector, ssize_t size_diff)
 {
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
