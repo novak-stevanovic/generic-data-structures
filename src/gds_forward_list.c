@@ -15,22 +15,31 @@ typedef struct _GDSForwardListNodeBase _GDSForwardListNodeBase;
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
+/* Dynamically allocates sizeof(_GDSForwardListNodeBase) + list->_data_size bytes for the list node. Returns NULL if
+ * it fails. The function assumes that 'list' is non-NULL and 'data' is non-NULL. */
 static _GDSForwardListNodeBase* _gds_forward_list_alloc_node(const GDSForwardList* list, const void* data);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+/* Returns address of node with index 'pos'. Function assumes non-NULL 'list' argument and that 'pos' is in bounds
+ * ('pos' < list->_count). */
 static _GDSForwardListNodeBase* _gds_forward_list_at_node(const GDSForwardList* list, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+/* Function to call when removing nodes from the list. This function assumes non-NULL argument 'list' and 'node'.
+ * First, the function calls list->_on_element_removal_func if non-NULL.
+ * Then, it frees the node pointed to by 'node'. */
 static void _gds_forward_list_on_node_removal(const GDSForwardList* list, _GDSForwardListNodeBase* node);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+/* Function assumes non-NULL 'list' argument. Returns size of one node in a list. */
 static size_t _gds_forward_list_get_node_size(const GDSForwardList* list);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+/* Function assumes non-NULL 'node' argument. It returns the address of node's data. */
 static void* _gds_forward_list_get_data_for_node(_GDSForwardListNodeBase* node);
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
@@ -61,13 +70,14 @@ GDSForwardList* gds_forward_list_create(size_t data_size, void (*_on_element_rem
     GDSForwardList* new_list = (GDSForwardList*)malloc(sizeof(GDSForwardList));
     if(new_list == NULL) return NULL;
 
-    gds_err init_status =gds_forward_list_init(new_list, data_size, _on_element_removal_func);
+    gds_err init_status = gds_forward_list_init(new_list, data_size, _on_element_removal_func);
 
     if(init_status != GDS_SUCCESS)
     {
         free(new_list);
         return NULL;
     }
+
     else return new_list;
 }
 
@@ -94,7 +104,7 @@ void gds_forward_list_destruct(GDSForwardList* list)
 void* gds_forward_list_at(const GDSForwardList* list, size_t pos)
 {
     if(list == NULL) return NULL;
-    if(pos > list->_count) return NULL;
+    if(pos >= list->_count) return NULL;
 
     _GDSForwardListNodeBase* node = _gds_forward_list_at_node(list, pos);
 
@@ -219,7 +229,7 @@ gds_err gds_forward_list_insert_at(GDSForwardList* list, const void* data, size_
 gds_err gds_forward_list_pop_front(GDSForwardList* list)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(list->_count == 0) return GDS_FWDLIST_ERR_FLIST_EMPTY;
+    if(list->_count == 0) return GDS_FWDLIST_ERR_LIST_EMPTY;
 
     _GDSForwardListNodeBase* next_head = list->_head->next;
 
@@ -282,11 +292,16 @@ bool gds_forward_list_is_empty(const GDSForwardList* list)
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-ssize_t gds_forward_list_get_count(const GDSForwardList* list)
+size_t gds_forward_list_get_count(const GDSForwardList* list)
 {
-    if(list == NULL) return -1;
+    return (list != NULL) ? list->_count : 0;
+}
 
-    return list->_count;
+// ---------------------------------------------------------------------------------------------------------------------
+
+size_t gds_forward_list_get_data_size(const GDSForwardList* list)
+{
+    return (list != NULL) ? list->_data_size : 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -336,6 +351,8 @@ static void _gds_forward_list_on_node_removal(const GDSForwardList* list, _GDSFo
 
     void* node_data = _gds_forward_list_get_data_for_node(node);
     if(list->_on_element_removal_func != NULL) list->_on_element_removal_func(node_data);
+
+    free(node);
 }
 
 static size_t _gds_forward_list_get_node_size(const GDSForwardList* list)

@@ -13,25 +13,22 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
-/* Shift elements right of index(including) start_idx rightward by calling memmove().
- * This function cannot expand the array if there is not enough memory allocated. Make sure that
- * array->count < array->alloced_count before calling. 
- * Return value:
- * on success: 0,
- * on failure: one of gds generic error codes */
-static gds_err _gds_array_shift_right(GDSArray* array, size_t start_idx);
+/* Shift elements right of index(including) 'start_idx' rightward by calling memmove().
+ * This function cannot expand the array if there is not enough memory allocated. 
+ * Make sure that: array->count < array->alloced_count before calling. 
+ * This function assumes that it will not receive a NULL pointer as 'array' argument, and that 'start_idx' < array's count. */
+static void _gds_array_shift_right(GDSArray* array, size_t start_idx);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Shift elements right of(including) index start_idx leftward by calling memmove().
- * Return value:
- * on success: 0
- * on failure: one of gds generic error codes */
-static gds_err _gds_array_shift_left(GDSArray* array, size_t start_idx);
+/* Shift elements right of(including) index 'start_idx' leftward by calling memmove(). 
+ * This function assumes that it will not receive a NULL pointer as 'array' argument, and that 'start_idx' < array's count. */
+static void _gds_array_shift_left(GDSArray* array, size_t start_idx);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Invokes array->on_element_removal_func(data) if the field is non-NULL. */
+/* Invokes array->on_element_removal_func(data) if the field is non-NULL.
+ * The function assumes non-NULL 'array' argument. */
 static void _gds_array_on_element_removal(GDSArray* array, void* data);
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -164,7 +161,7 @@ gds_err gds_array_insert_at(GDSArray* array, const void* data, size_t pos)
     if(pos < array->_count) _gds_array_shift_right(array, pos);
 
     array->_count++; // it is important to increase the count first, so that the gsd_array_assign() function will work.
-    gds_err assign_op_status = gds_array_assign(array, data, pos);
+    gds_array_assign(array, data, pos);
 
     return GDS_SUCCESS;
 
@@ -269,11 +266,8 @@ size_t gds_array_get_struct_size()
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
-static gds_err _gds_array_shift_right(GDSArray* array, size_t start_idx)
+static void _gds_array_shift_right(GDSArray* array, size_t start_idx)
 {
-    if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(start_idx >= array->_count) return GDS_GEN_ERR_INVALID_ARG(2);
-
     size_t array_count = array->_count;
 
     size_t step = array->_element_size;
@@ -282,14 +276,10 @@ static gds_err _gds_array_shift_right(GDSArray* array, size_t start_idx)
     void* start_pos = gds_array_at(array, start_idx);
 
     memmove(start_pos + step, start_pos, step * elements_shifted);
-    return GDS_SUCCESS;
 }
 
-static gds_err _gds_array_shift_left(GDSArray* array, size_t start_idx)
+static void _gds_array_shift_left(GDSArray* array, size_t start_idx)
 {
-    if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(start_idx >= array->_count) return GDS_GEN_ERR_INVALID_ARG(2);
-
     size_t array_count = array->_count;
 
     size_t step = array->_element_size;
@@ -298,7 +288,6 @@ static gds_err _gds_array_shift_left(GDSArray* array, size_t start_idx)
     void* start_pos = gds_array_at(array, start_idx) - step;
 
     memmove(start_pos, start_pos + step, step * elements_shifted);
-    return GDS_SUCCESS;
 }
 
 

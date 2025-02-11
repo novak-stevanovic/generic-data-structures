@@ -12,10 +12,35 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
+/* Function retrieves the minimum capacity of the vector based on the value it was passed to it during the vector's initialization.
+ * The function expects a non-NULL argument */
 size_t _gds_vector_get_min_size(const GDSVector* vector);
 
+/* Function calculates if the vector should shrink. This is decided by the used up space of the last allocated chunk for vector's data.
+ * When that chunk's empty, the vector should shrink. One exception to this rule is when the count of the vector reaches 0. In that case,
+ * the chunk responsible for storing the first <minimum capacity> elements remains even if it is fully obsolete. 
+ * This function assumes a non-NULL argument. */
 static bool _gds_vector_should_vector_shrink(const GDSVector* vector);
 
+
+/* This function performs a realloc so that it may store vector's capacity + size_diff elements. 
+ * However, this function must be called in a very controlled manner. 
+ * It may be used for both expanding and shrinking the vector.
+ *      - If its used for expanding: This function will attempt to realloc() the vector's data so that it can fit
+ *      the new capacity. If it succeeds, a new chunk will be appended to the vector's chunk list so that it 
+ *      can know when to free memory.
+ *
+ *      - If it's used for shrinking: This function must be called so that the value of 
+ *      abs(size_diff) < max_shrink_value. max_shrink_value is a value that represents how much the vector 
+ *      may be shrank so that it takes into account its minimum capacity. It is calculated as 
+ *      (vector's capacity - _gds_vector_get_min_size(). After computing this, the function will perform
+ *      a realloc() call which may theoretically fail. If it succeeds, a call to 
+ *      _gds_vector_chunk_list_shrink_by() will be made to fix the tracking of the vector's chunks. 
+ * Return value:
+ * on success: GDS_SUCCESS,
+ * on failure: one of the generic codes representing invalid arguments or GDS_VEC_ERR_REALLOC_FAIL. 
+ * Invalid arguments error codes are returned when: 'vector' is NULL, 'size_diff' == 0, or when the vector
+ * must shrink but (abs(size_diff) > max_shrink_value). */
 static gds_err _gds_vector_allocate(GDSVector* vector, ssize_t size_diff);
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
@@ -278,7 +303,7 @@ size_t gds_vector_get_struct_size()
 
 size_t _gds_vector_get_min_size(const GDSVector* vector)
 {
-    assert(vector != NULL);
+    // assert(vector != NULL);
 
     return _gds_vector_chunk_list_get_min_size(&vector->_chunks);
 }
@@ -291,7 +316,6 @@ static bool _gds_vector_should_vector_shrink(const GDSVector* vector)
 
     return (vector_data->_count <= (vector_data->_capacity - _gds_vector_chunk_list_get_min_size(&vector->_chunks)));
 }
-
 static gds_err _gds_vector_allocate(GDSVector* vector, ssize_t size_diff)
 {
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
@@ -305,7 +329,7 @@ static gds_err _gds_vector_allocate(GDSVector* vector, ssize_t size_diff)
         gds_err realloc_status = gds_array_realloc(vector_data, current_capacity + size_diff);
 
         if(realloc_status != GDS_SUCCESS) return GDS_VEC_ERR_REALLOC_FAIL;
-        else _gds_vector_chunk_list_add_new_chunk(&vector->_chunks, size_diff);
+        else _gds_vector_chunk_list_add_new_chunk(&vector->_chunks, (size_t)size_diff);
     }
     else
     {
