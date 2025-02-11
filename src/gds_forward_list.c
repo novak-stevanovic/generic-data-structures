@@ -354,7 +354,7 @@ GDSForwardListIterator* gds_forward_list_iterator_create(GDSForwardList* list)
 gds_err gds_forward_list_iterator_next(GDSForwardListIterator* iterator)
 {
     if(iterator == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(iterator->_curr_node == NULL) GDS_FAILURE;
+    if(iterator->_curr_node == NULL) return GDS_FAILURE;
 
     _GDSForwardListNodeBase* next_node = iterator->_curr_node->next;
     if(next_node == NULL) return GDS_FWDLIST_ITER_ERR_OUT_OF_BOUNDS;
