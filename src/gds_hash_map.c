@@ -29,6 +29,12 @@ gds_err gds_hash_map_init(GDSHashMap* hash_map,
         size_t (*hash_func)(void* data, size_t max_val),
         void (*on_removal_func)(void*))
 {
+#ifdef GDS_INIT_MAX_SIZE
+
+    if((key_data_size > GDS_INIT_MAX_SIZE) || (value_data_size)) return GDS_ERR_MAX_INIT_SIZE_EXCEED;
+
+#endif // GDS_INIT_MAX_SIZE
+
     if(hash_map == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(key_data_size == 0) return GDS_GEN_ERR_INVALID_ARG(2);
     if(value_data_size == 0) return GDS_GEN_ERR_INVALID_ARG(3);

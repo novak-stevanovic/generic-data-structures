@@ -1,5 +1,7 @@
-#ifndef _GDS_HASH_MAP_DEF_H_
-#define _GDS_HASH_MAP_DEF_H_
+// INTERNAL HEADER FILE - DO NOT INCLUDE DIRECTLY.
+
+#ifndef __GDS_HASH_MAP_DEF_H__
+#define __GDS_HASH_MAP_DEF_H__
 
 #ifndef __GDS_HASH_MAP_DEF_ALLOW__
 #error "Do not include directly."
@@ -22,4 +24,4 @@ struct GDSHashMap
     void (*_on_value_removal_func)(void*);
 };
 
-#endif // _GDS_HASH_MAP_DEF_H_
+#endif // __GDS_HASH_MAP_DEF_H__

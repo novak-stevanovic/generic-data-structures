@@ -51,6 +51,12 @@ gds_err gds_vector_init(GDSVector* vector,
         size_t min_capacity,
         size_t (*get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size))
 {
+#ifdef GDS_INIT_MAX_SIZE
+
+    if(element_size > GDS_INIT_MAX_SIZE) return GDS_ERR_MAX_INIT_SIZE_EXCEED;
+
+#endif // GDS_INIT_MAX_SIZE
+
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(element_size == 0) return GDS_GEN_ERR_INVALID_ARG(2);
     if(min_capacity == 0) return GDS_GEN_ERR_INVALID_ARG(4);

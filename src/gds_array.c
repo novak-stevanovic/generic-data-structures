@@ -35,6 +35,10 @@ static void _gds_array_on_element_removal(GDSArray* array, void* data);
 
 gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size, void (*on_element_removal_func)(void*))
 {
+#ifdef GDS_INIT_MAX_SIZE
+    if(element_size > GDS_INIT_MAX_SIZE) return GDS_ERR_MAX_INIT_SIZE_EXCEED;
+#endif // GDS_INIT_MAX_SIZE
+
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(capacity == 0) return GDS_GEN_ERR_INVALID_ARG(2);
     if(element_size == 0) return GDS_GEN_ERR_INVALID_ARG(3);
@@ -48,13 +52,16 @@ gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size, vo
 
     if(array->_data == NULL) return GDS_ARR_ERR_MALLOC_FAIL;
 
-    array->_swap_buff = malloc(element_size);
+#ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
 
+    array->_swap_buff = malloc(element_size);
     if(array->_swap_buff == NULL)
     {
         free(array->_data);
         return GDS_ARR_ERR_MALLOC_FAIL;
     }
+
+#endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
 
     return GDS_SUCCESS;
 }
@@ -91,8 +98,13 @@ void gds_array_destruct(GDSArray* array)
     array->_capacity = 0;
     array->_element_size = 0;
     array->_on_element_removal_func = NULL;
+
+#ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
+
     free(array->_swap_buff);
     array->_swap_buff = NULL;
+
+#endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -135,9 +147,25 @@ gds_err gds_array_swap(const GDSArray* array, size_t pos1, size_t pos2)
 
     size_t data_size = array->_element_size;
 
-    memcpy(array->_swap_buff, pos1_data, data_size);
+#ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
+
+    void* swap_buff = array->_swap_buff;
+
+#endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
+#ifdef GDS_TEMP_BUFF_USE_VLA
+
+    char swap_buff[data_size];
+
+#endif // GDS_TEMP_BUFF_USE_VLA
+#ifdef GDS_TEMP_BUFF_USE_ALLOCA
+
+    void* swap_buff = alloca(data_size);
+
+#endif // GDS_TEMP_BUFF_USE_ALLOCA
+
+    memcpy(swap_buff, pos1_data, data_size);
     memcpy(pos1_data, pos2_data, data_size);
-    memcpy(pos2_data, array->_swap_buff, data_size);
+    memcpy(pos2_data, swap_buff, data_size);
 
     return GDS_SUCCESS;
 }

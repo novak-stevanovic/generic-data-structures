@@ -3,6 +3,8 @@
 #ifndef __GDS_VECTOR_DEF_H__
 #define __GDS_VECTOR_DEF_H__
 
+#include "gds.h"
+
 #ifndef __GDS_VECTOR_DEF_ALLOW__
 #error "Do not include directly."
 #endif // __GDS_VECTOR_DEF_ALLOW__
@@ -12,7 +14,7 @@
 #define __GDS_ARRAY_DEF_ALLOW__
 #include "gds_array_def.h"
 
-#define __GDS_VECTOR_CHUNK_LIST_H_ALLOW__
+#define __GDS_VECTOR_CHUNK_LIST_DEF_ALLOW__
 #include "_gds_vector_chunk_list.h"
 
 struct GDSVector

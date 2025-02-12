@@ -32,7 +32,9 @@ typedef struct GDSForwardListIterator GDSForwardListIterator;
  * data_size must be greater than 0. _on_element_removal_func may be NULL.
  * Return value:
  * on success: GDS_SUCCESS,
- * on failure: one of the generic error codes representing invalid arguments or GDS_FWDLIST_ERR_MALLOC_FAIL. */
+ * on failure: one of the generic error codes representing invalid arguments or GDS_FWDLIST_ERR_MALLOC_FAIL. 
+ * Note: As any other init function, the function may fail if 'data_size' exceeds GDS_INIT_MAX_SIZE. This macro,
+ * if defined, is defined gds.h. */
 gds_err gds_forward_list_init(GDSForwardList* list, size_t data_size, void (*_on_element_removal_func)(void*));
 
 // ---------------------------------------------------------------------------------------------------------------------

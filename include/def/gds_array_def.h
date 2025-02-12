@@ -1,5 +1,7 @@
 // INTERNAL HEADER FILE - DO NOT INCLUDE DIRECTLY.
 
+#include "gds.h"
+
 #ifndef __GDS_ARRAY_DEF_H__
 #define __GDS_ARRAY_DEF_H__
 
@@ -23,7 +25,9 @@ struct GDSArray
         //   to properly free the memory of elements removed from the array.
         // - In this case, the `void*` parameter represents a pointer to an element inside the array,
         //   which itself is a pointer to a dynamically allocated object */
+    #ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
     void* _swap_buff;
+    #endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
 };
 
 #endif

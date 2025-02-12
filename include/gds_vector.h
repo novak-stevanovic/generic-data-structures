@@ -35,7 +35,9 @@ typedef struct GDSVector GDSVector;
  * GDS_VEC_ERR_INIT_FAIL. Function may fail: if 'vector is NULL', if 'element_size' == 0, if
  * 'min_capacity' == 0, if '_get_next_chunk_size_func' == NULL. Function may also return 
  * GDS_ARR_ERR_MALLOC_FAIL if dynamic allocation for the vector's data fails. Function may also
- * return GDS_VEC_ERR_INIT_FAIL if initializing of internal GDSVector or _GDSVectorChunkList fails. */
+ * return GDS_VEC_ERR_INIT_FAIL if initializing of internal GDSVector or _GDSVectorChunkList fails.
+ * Note: As any other init function, the function may fail if 'data_size' exceeds GDS_INIT_MAX_SIZE. This macro,
+ * if defined, is defined gds.h. */
 gds_err gds_vector_init(GDSVector* vector,
         size_t element_size,
         void (*on_element_removal_func)(void*),

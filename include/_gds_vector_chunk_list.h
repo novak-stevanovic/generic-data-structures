@@ -5,9 +5,9 @@
 
 #include "gds.h"
 
-#ifndef __GDS_VECTOR_CHUNK_LIST_H_ALLOW__
+#ifndef __GDS_VECTOR_CHUNK_LIST_DEF_ALLOW__
 #error "Do not include directly."
-#endif // __GDS_VECTOR_CHUNK_LIST_H_ALLOW__ 
+#endif // __GDS_VECTOR_CHUNK_LIST_DEF_ALLOW__ 
 
 #define __GDS_FORWARD_LIST_DEF_ALLOW__
 #include "def/gds_forward_list_def.h"
@@ -32,4 +32,4 @@ size_t _gds_vector_chunk_list_get_last_chunk_size(const _GDSVectorChunkList* chu
 // Function assumes that there are existing chunks in the chunk list and chunk list is not NULL.
 size_t _gds_vector_chunk_list_get_min_size(const _GDSVectorChunkList* chunk_list);
 
-#endif //__GDS_VECTOR_CHUNK_LIST_H__
+#endif // __GDS_VECTOR_CHUNK_LIST_H__

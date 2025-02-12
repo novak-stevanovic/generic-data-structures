@@ -30,7 +30,9 @@ typedef struct GDSArray GDSArray;
  * Return value:
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument, or GDS_ARR_ERR_MALLOC_FAIL.
- * Function may fail if 'array' is NULL, 'capacity' == 0, 'element_size' == 0. */
+ * Function may fail if 'array' is NULL, 'capacity' == 0, 'element_size' == 0.
+ * Note: As any other init function, the function may fail if 'element_size' exceeds GDS_INIT_MAX_SIZE. This macro,
+ * if defined, is defined gds.h. */
 gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size, void (*on_element_removal_func)(void*));
 
 // ---------------------------------------------------------------------------------------------------------------------

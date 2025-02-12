@@ -1,5 +1,7 @@
 // INTERNAL HEADER FILE - DO NOT INCLUDE DIRECTLY.
 
+#include "gds.h"
+
 #ifndef __GDS_FORWARD_LIST_DEF_H__
 #define __GDS_FORWARD_LIST_DEF_H__
 
@@ -29,7 +31,9 @@ struct GDSForwardList
         // - The node may store pointers to dynamically allocated objects. This function can be used 
         //   to properly free the dynamically allocated memory.
     
+    #ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
     void* _swap_buff;
+    #endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
 };
 
 struct GDSForwardListIterator
