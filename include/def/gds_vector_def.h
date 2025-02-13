@@ -15,7 +15,7 @@
 #include "gds_array_def.h"
 
 #define __GDS_VECTOR_CHUNK_LIST_DEF_ALLOW__
-#include "_gds_vector_chunk_list.h"
+#include "internal/_gds_vector_chunk_list.h"
 
 struct GDSVector
 {

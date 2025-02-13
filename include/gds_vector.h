@@ -17,11 +17,11 @@ typedef struct GDSVector GDSVector;
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
-#define GDS_VEC_ERR_BASE 3000
-#define GDS_VEC_ERR_VEC_EMPTY 3001
-#define GDS_VEC_ERR_MALLOC_FAIL 3002
-#define GDS_VEC_ERR_REALLOC_FAIL 3003
-#define GDS_VEC_ERR_INIT_FAIL 3004
+#define GDS_VEC_ERR_BASE 200
+#define GDS_VEC_ERR_VEC_EMPTY 201
+#define GDS_VEC_ERR_MALLOC_FAIL 202
+#define GDS_VEC_ERR_REALLOC_FAIL 203
+#define GDS_VEC_ERR_INIT_FAIL 204
 #define GDS_VEC_ERR_CHUNK_GEN_FUNC_FAIL 3005 // Occurs when vector->_get_next_chunk_size_func returns 0
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
@@ -37,12 +37,13 @@ typedef struct GDSVector GDSVector;
  * GDS_ARR_ERR_MALLOC_FAIL if dynamic allocation for the vector's data fails. Function may also
  * return GDS_VEC_ERR_INIT_FAIL if initializing of internal GDSVector or _GDSVectorChunkList fails.
  * Note: As any other init function, the function may fail if 'data_size' exceeds GDS_INIT_MAX_SIZE. This macro,
- * if defined, is defined gds.h. */
+ * if defined, is defined in gds.h. */
 gds_err gds_vector_init(GDSVector* vector,
         size_t element_size,
         void (*on_element_removal_func)(void*),
         size_t min_capacity,
-        size_t (*_get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size));
+        size_t (*get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size),
+        bool (*compare_func)(void*, void*));
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -55,7 +56,8 @@ gds_err gds_vector_init(GDSVector* vector,
 GDSVector* gds_vector_create(size_t element_size,
         void (*on_element_removal_func)(void*),
         size_t min_capacity,
-        size_t (*get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size));
+        size_t (*get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size),
+        bool (*compare_func)(void*, void*));
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -94,9 +96,7 @@ gds_err gds_vector_swap(const GDSVector* vector, size_t pos1, size_t pos2);
 
 /* Appends data pointed to by data to the end of the vector.
  * Performs the call: gds_vector_insert_at(vector, data, vector's count).
- * If the vector is at its capacity, the vector will attempt
- * to perform realloc(). The size argument used for realloc() is determined by the vector's _get_next_chunk_size_func
- * (it will be equal to the current vector capacity + the value returned by the called function).
+ * This action may invoke realloc() to expand the vector - if at max capacity.
  * Return value:
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument or GDS_VEC_ERR_REALLOC_FAIL.
@@ -109,9 +109,7 @@ gds_err gds_vector_push_back(GDSVector* vector, const void* data);
 /* Inserts data pointed to by data to index pos in the vector. This is done by shifting all elements with
  * index greater or equal than 'pos' rightward(through a memmove() call), and inserting the element at the empty spot.
  * If pos == vector's count, no shifting is performed.
- * If the vector is at its capacity, the vector will attempt
- * to perform realloc(). The size argument used for realloc() is determined by the vector's _get_next_chunk_size_func
- * (it will be equal to the current vector capacity + the value returned by the called function).
+ * This action may invoke realloc() to expand the vector - if at max capacity.
  * Return value:
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument or GDS_VEC_ERR_REALLOC_FAIL.
@@ -122,10 +120,7 @@ gds_err gds_vector_insert_at(GDSVector* vector, const void* data, size_t pos);
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Removes last element in vector by performing a call: gds_vector_remove_at(vector, vector's count - 1).
- * If, when removing an element, the removal of the element leaves the last allocated 'chunk' of memory for the vector's
- * data empty, an attempt to shrink the vector's data(via realloc()) will be made. The vector will be shrank
- * by the amount equal to the size of the last allocated chunk(this amount is determined by the last call
- * of vector->_get_next_chunk_size_func).
+ * This action may invoke realloc() to shrink the vector.
  * This function will invoke vector->_on_element_removal_func for the removed element.
  * The vector will always retain capacity for the amount of elements passed to it in its init/create function.
  * Return value:
@@ -140,10 +135,7 @@ gds_err gds_vector_pop_back(GDSVector* vector);
 
 /* Removes element with position 'pos' from vector. This is done by shifting all elements with index greater than 'pos'
  * leftwards through a memmove() call.
- * If, when removing an element, the removal of the element leaves the last allocated 'chunk' of memory for the vector's
- * data empty, an attempt to shrink the vector's data(via realloc()) will be made. The vector will be shrank
- * by the amount equal to the size of the last allocated chunk(this amount is determined by the last call
- * of vector->_get_next_chunk_size_func).
+ * This action may invoke realloc() to shrink the vector.
  * This function will invoke vector->_on_element_removal_func for the removed element.
  * The vector will always retain capacity for the amount of elements passed to it in its init/create function.
  * Return value:
@@ -169,7 +161,7 @@ gds_err gds_vector_empty(GDSVector* vector);
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Function will preallocate a new chunk of memory for the vector to store its elements. This will result in a realloc()
- * call that will expand the vector and increase its capacity. Argument 'new_chunk_size' may not be 0.
+ * call that will expand the vector. If 'new_chunk_size' == 0, the function will perform no action.
  * Return value:
  * on success: GDS_SUCCESS,
  * on failure: one of the generic error codes representing an invalid argument or GDS_VEC_ERR_REALLOC_FAIL.
@@ -179,7 +171,8 @@ gds_err gds_vector_prealloc(GDSVector* vector, size_t new_chunk_size);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Function will shrink the vector's capacity so it can exactly fit its count. This will result in a realloc() call.
+/* Function will shrink the vector's capacity so it can exactly fit its count. If the vector's capacity == vector's
+ * count, the function performs no work. This will result in a realloc() call.
  * Return value:
  * on success: GDS_SUCCESS,
  * on failure: one of the generic error codes representing an invalid argument or GDS_VEC_ERR_REALLOC_FAIL.
@@ -208,9 +201,10 @@ size_t gds_vector_get_element_size(const GDSVector* vector);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Performs sizeof(GDSArray) and returns the value. */
+/* Performs sizeof(GDSVector) and returns the value. */
 size_t gds_vector_get_struct_size();
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
 #endif // _GDS_VECTOR_H_
+

@@ -1,7 +1,7 @@
 #include "gds.h"
 
 #define __GDS_VECTOR_CHUNK_LIST_DEF_ALLOW__
-#include "_gds_vector_chunk_list.h"
+#include "internal/_gds_vector_chunk_list.h"
 
 #include <assert.h>
 
@@ -94,3 +94,4 @@ size_t __gds_vector_chunk_list_get_sum(const _GDSVectorChunkList* chunk_list)
 
     return sum;
 }
+

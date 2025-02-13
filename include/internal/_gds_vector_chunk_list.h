@@ -33,3 +33,4 @@ size_t _gds_vector_chunk_list_get_last_chunk_size(const _GDSVectorChunkList* chu
 size_t _gds_vector_chunk_list_get_min_size(const _GDSVectorChunkList* chunk_list);
 
 #endif // __GDS_VECTOR_CHUNK_LIST_H__
+

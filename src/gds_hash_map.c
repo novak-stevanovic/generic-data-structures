@@ -10,6 +10,9 @@
 #include "def/gds_hash_map_def.h"
 #endif
 
+#define __GDS_LIGHT_VECTOR_DEF_ALLOW__
+#include "gds_light_vector.h"
+
 #define _GDS_HASH_MAP_DATA_MIN_CAP 5
 
 static size_t _gds_hash_map_data_get_next_chunk_size_func(GDSVector* data, size_t last_chunk_count)
@@ -48,10 +51,10 @@ gds_err gds_hash_map_init(GDSHashMap* hash_map,
     // TODO add removal func, check the get next size func
 
     gds_err data_init_status = gds_vector_init(&hash_map->_data,
-            sizeof(GDSVector*),
+            sizeof(GDSLightVector*),
             _gds_hash_map_data_on_vector_removal_func,
             _GDS_HASH_MAP_DATA_MIN_CAP,
-            _gds_hash_map_data_get_next_chunk_size_func);
+            _gds_hash_map_data_get_next_chunk_size_func, NULL);
 
     if(data_init_status != GDS_SUCCESS) return GDS_HASH_MAP_ERR_INIT_FAIL;
 

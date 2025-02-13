@@ -5,7 +5,7 @@
 
 #ifndef __GDS_HASH_MAP_DEF_ALLOW__
 #error "Do not include directly."
-#endif // __GDS_HASHMAP_DEF_ALLOW__
+#endif // __GDS_HASH_MAP_DEF_ALLOW__
 
 #include <stdbool.h>
 

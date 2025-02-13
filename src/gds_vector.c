@@ -8,7 +8,7 @@
 #ifdef GDS_ENABLE_OPAQUE_STRUCTS
 #define __GDS_VECTOR_DEF_ALLOW__
 #include "def/gds_vector_def.h"
-#endif
+#endif // __GDS_VECTOR_DEF_ALLOW__
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -49,7 +49,8 @@ gds_err gds_vector_init(GDSVector* vector,
         size_t element_size,
         void (*on_element_removal_func)(void*),
         size_t min_capacity,
-        size_t (*get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size))
+        size_t (*get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size),
+        bool (*compare_func)(void*, void*))
 {
 #ifdef GDS_INIT_MAX_SIZE
 
@@ -62,7 +63,8 @@ gds_err gds_vector_init(GDSVector* vector,
     if(min_capacity == 0) return GDS_GEN_ERR_INVALID_ARG(4);
     if(get_next_chunk_size_func == NULL) return GDS_GEN_ERR_INVALID_ARG(5);
 
-    gds_err data_init_status = gds_array_init(&vector->_data, min_capacity, element_size, on_element_removal_func);
+    gds_err data_init_status = gds_array_init(&vector->_data, min_capacity, element_size,
+            on_element_removal_func, compare_func);
     if(data_init_status != GDS_SUCCESS) return GDS_FAILURE;
 
     gds_err chunks_init_status = _gds_vector_chunk_list_init(&vector->_chunks, min_capacity);
@@ -82,7 +84,8 @@ gds_err gds_vector_init(GDSVector* vector,
 GDSVector* gds_vector_create(size_t element_size,
         void (*on_element_removal_func)(void*),
         size_t min_capacity,
-        size_t (*get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size))
+        size_t (*get_next_chunk_size_func)(struct GDSVector* vector, size_t last_chunk_size),
+        bool (*compare_func)(void*, void*))
 {
     if(element_size == 0) return NULL;
     if(min_capacity == 0) return NULL;
@@ -90,7 +93,8 @@ GDSVector* gds_vector_create(size_t element_size,
 
     GDSVector* vector = (GDSVector*)malloc(sizeof(GDSVector));
 
-    gds_err init_status = gds_vector_init(vector, element_size, on_element_removal_func, min_capacity, get_next_chunk_size_func);
+    gds_err init_status = gds_vector_init(vector, element_size, on_element_removal_func, min_capacity,
+            get_next_chunk_size_func, compare_func);
 
     if(init_status != GDS_SUCCESS) return NULL;
 
@@ -162,7 +166,7 @@ gds_err gds_vector_push_back(GDSVector* vector, const void* data)
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(data == NULL) return GDS_GEN_ERR_INVALID_ARG(2);
 
-    return gds_vector_insert_at(vector, data, vector->_data._count);
+    return gds_vector_insert_at(vector, data, vector->_data._base._count);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -174,9 +178,12 @@ gds_err gds_vector_insert_at(GDSVector* vector, const void* data, size_t pos)
 
     GDSArray* vector_data = &vector->_data;
 
-    if(pos > vector_data->_count) return GDS_GEN_ERR_INVALID_ARG(3);
+    size_t vector_count = gds_vector_get_count(vector);
+    size_t vector_capacity = gds_vector_get_capacity(vector);
 
-    if(vector_data->_capacity == vector_data->_count)
+    if(pos > vector_count) return GDS_GEN_ERR_INVALID_ARG(3);
+
+    if(vector_capacity == vector_count)
     {
         size_t new_chunk_size = vector->_get_next_chunk_size_func(vector, _gds_vector_chunk_list_get_last_chunk_size(&vector->_chunks));
         if(new_chunk_size == 0) return GDS_VEC_ERR_CHUNK_GEN_FUNC_FAIL;
@@ -197,7 +204,9 @@ gds_err gds_vector_pop_back(GDSVector* vector)
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(gds_vector_is_empty(vector)) return GDS_VEC_ERR_VEC_EMPTY;
 
-    return gds_vector_remove_at(vector, vector->_data._count - 1);
+    size_t vector_count = gds_vector_get_count(vector);
+
+    return gds_vector_remove_at(vector, vector_count - 1);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -207,8 +216,9 @@ gds_err gds_vector_remove_at(GDSVector* vector, size_t pos)
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
 
     GDSArray* vector_data = &vector->_data;
+    size_t vector_count = gds_vector_get_count(vector);
 
-    if(pos >= vector_data->_count) return GDS_GEN_ERR_INVALID_ARG(2);
+    if(pos >= vector_count) return GDS_GEN_ERR_INVALID_ARG(2);
 
     gds_array_remove_at(vector_data, pos);
 
@@ -242,7 +252,7 @@ gds_err gds_vector_empty(GDSVector* vector)
 gds_err gds_vector_prealloc(GDSVector* vector, size_t new_chunk_size)
 {
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(new_chunk_size == 0) return GDS_GEN_ERR_INVALID_ARG(2);
+    if(new_chunk_size == 0) return GDS_SUCCESS;
 
     gds_err alloc_status = _gds_vector_allocate(vector, new_chunk_size);
 
@@ -256,11 +266,12 @@ gds_err gds_vector_fit(GDSVector* vector)
 {
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
 
-    GDSArray* vector_data = &vector->_data;
+    size_t vector_count = gds_vector_get_count(vector);
+    size_t vector_capacity = gds_vector_get_capacity(vector);
 
     size_t min_size = _gds_vector_get_min_size(vector);
-    size_t required_size = (vector_data->_count > min_size) ? vector_data->_count : min_size;
-    size_t shrink_amount = (vector_data->_capacity - required_size);
+    size_t required_size = (vector_count > min_size) ? vector_count : min_size;
+    size_t shrink_amount = (vector_capacity - required_size);
 
     ssize_t expansion_amount = -((ssize_t)shrink_amount);
 
@@ -276,7 +287,7 @@ gds_err gds_vector_fit(GDSVector* vector)
 
 size_t gds_vector_get_count(const GDSVector* vector)
 {
-    return (vector != NULL) ? vector->_data._count : 0;
+    return (vector != NULL) ? gds_array_get_count(&vector->_data) : 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -290,14 +301,14 @@ bool gds_vector_is_empty(const GDSVector* vector)
 
 size_t gds_vector_get_element_size(const GDSVector* vector)
 {
-    return (vector != NULL) ? vector->_data._element_size : 0;
+    return (vector != NULL) ? gds_array_get_element_size(&vector->_data) : 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 size_t gds_vector_get_capacity(const GDSVector* vector)
 {
-    return (vector != NULL) ? vector->_data._capacity : 0;
+    return (vector != NULL) ? gds_array_get_capacity(&vector->_data) : 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -322,7 +333,7 @@ static bool _gds_vector_should_vector_shrink(const GDSVector* vector)
 
     const GDSArray* vector_data = &vector->_data;
 
-    return (vector_data->_count <= (vector_data->_capacity - _gds_vector_chunk_list_get_min_size(&vector->_chunks)));
+    return (gds_vector_get_count(vector) <= (gds_vector_get_capacity(vector) - _gds_vector_chunk_list_get_min_size(&vector->_chunks)));
 }
 
 static gds_err _gds_vector_allocate(GDSVector* vector, ssize_t size_diff)
@@ -331,7 +342,7 @@ static gds_err _gds_vector_allocate(GDSVector* vector, ssize_t size_diff)
     if(size_diff == 0) return GDS_GEN_ERR_INVALID_ARG(2);
     
     GDSArray* vector_data = &vector->_data;
-    size_t current_capacity = vector_data->_capacity;
+    size_t current_capacity = gds_vector_get_capacity(vector);
 
     if(size_diff > 0)
     {
