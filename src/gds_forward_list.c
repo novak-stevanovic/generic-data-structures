@@ -122,7 +122,7 @@ void* gds_forward_list_at(const GDSForwardList* list, size_t pos)
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_forward_list_assign(const GDSForwardList* list, const void* data, size_t pos)
+gds_err gds_forward_list_assign(GDSForwardList* list, const void* data, size_t pos)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(data == NULL) return GDS_GEN_ERR_INVALID_ARG(2);
@@ -136,7 +136,7 @@ gds_err gds_forward_list_assign(const GDSForwardList* list, const void* data, si
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_forward_list_swap(const GDSForwardList* list, size_t pos1, size_t pos2)
+gds_err gds_forward_list_swap(GDSForwardList* list, size_t pos1, size_t pos2)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(pos1 >= list->_count) return GDS_GEN_ERR_INVALID_ARG(2);

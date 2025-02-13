@@ -65,13 +65,13 @@ gds_err gds_vector_init(GDSVector* vector,
 
     gds_err data_init_status = gds_array_init(&vector->_data, min_capacity, element_size,
             on_element_removal_func, compare_func);
-    if(data_init_status != GDS_SUCCESS) return GDS_FAILURE;
+    if(data_init_status != GDS_SUCCESS) return GDS_VEC_ERR_INIT_FAIL;
 
     gds_err chunks_init_status = _gds_vector_chunk_list_init(&vector->_chunks, min_capacity);
     if(chunks_init_status != GDS_SUCCESS)
     {
         gds_array_destruct(&vector->_data);
-        return GDS_FAILURE;
+        return GDS_VEC_ERR_INIT_FAIL;
     }
 
     vector->_get_next_chunk_size_func = get_next_chunk_size_func;
@@ -128,12 +128,12 @@ void* gds_vector_at(const GDSVector* vector, size_t pos)
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_vector_assign(const GDSVector* vector, const void* data, size_t pos)
+gds_err gds_vector_assign(GDSVector* vector, const void* data, size_t pos)
 {
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(data == NULL) return GDS_GEN_ERR_INVALID_ARG(2);
 
-    const GDSArray* vector_data = &vector->_data;
+    GDSArray* vector_data = &vector->_data;
 
     if(pos >= gds_array_get_count(vector_data)) return GDS_GEN_ERR_INVALID_ARG(3);
 
@@ -144,11 +144,11 @@ gds_err gds_vector_assign(const GDSVector* vector, const void* data, size_t pos)
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_vector_swap(const GDSVector* vector, size_t pos1, size_t pos2)
+gds_err gds_vector_swap(GDSVector* vector, size_t pos1, size_t pos2)
 {
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
 
-    const GDSArray* vector_data = &vector->_data;
+    GDSArray* vector_data = &vector->_data;
     size_t vector_data_count = gds_array_get_count(vector_data);
 
     if(pos1 >= vector_data_count) return GDS_GEN_ERR_INVALID_ARG(2);

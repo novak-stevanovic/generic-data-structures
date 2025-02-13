@@ -71,14 +71,14 @@ void* gds_light_vector_at(const GDSLightVector* vector, size_t pos)
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_light_vector_assign(const GDSLightVector* vector, const void* data, size_t pos)
+gds_err gds_light_vector_assign(GDSLightVector* vector, const void* data, size_t pos)
 {
     return gds_light_array_assign(&vector->_data, data, pos);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_light_vector_swap(const GDSLightVector* vector, size_t pos1, size_t pos2)
+gds_err gds_light_vector_swap(GDSLightVector* vector, size_t pos1, size_t pos2)
 {
     return gds_light_array_swap(&vector->_data, pos1, pos2);
 }

@@ -66,7 +66,7 @@ void* gds_light_array_at(const GDSLightArray* array, size_t pos);
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument.
  * Function may fail if 'array' or 'data' are NULL or 'pos' is out of bounds('pos' >= array's count). */
-gds_err gds_light_array_assign(const GDSLightArray* array, const void* data, size_t pos);
+gds_err gds_light_array_assign(GDSLightArray* array, const void* data, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ gds_err gds_light_array_assign(const GDSLightArray* array, const void* data, siz
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument.
  * Function may fail if 'array' is NULL or 'pos1' or 'pos2' are out of bounds('pos' >= array's count). */
-gds_err gds_light_array_swap(const GDSLightArray* array, size_t pos1, size_t pos2);
+gds_err gds_light_array_swap(GDSLightArray* array, size_t pos1, size_t pos2);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

@@ -70,7 +70,7 @@ void* gds_forward_list_at(const GDSForwardList* list, size_t pos);
  * on success: GDS_SUCCESS,
  * on failure: one of the generic error codes representing invalid arguments.
  * Function may fail if 'list' or 'data' are NULL or if 'pos' is out of bounds. */ 
-gds_err gds_forward_list_assign(const GDSForwardList* list, const void* data, size_t pos);
+gds_err gds_forward_list_assign(GDSForwardList* list, const void* data, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -79,7 +79,7 @@ gds_err gds_forward_list_assign(const GDSForwardList* list, const void* data, si
  * on success: GDS_SUCCESS,
  * on failure: one of the generic error codes representing invalid arguments.
  * Function may fail if 'list' is NULL or 'pos1' or 'pos2' are out of bounds. */
-gds_err gds_forward_list_swap(const GDSForwardList* list, size_t pos1, size_t pos2);
+gds_err gds_forward_list_swap(GDSForwardList* list, size_t pos1, size_t pos2);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

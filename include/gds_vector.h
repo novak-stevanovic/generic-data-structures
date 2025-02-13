@@ -21,7 +21,7 @@ typedef struct GDSVector GDSVector;
 #define GDS_VEC_ERR_VEC_EMPTY 201
 #define GDS_VEC_ERR_MALLOC_FAIL 202
 #define GDS_VEC_ERR_REALLOC_FAIL 203
-#define GDS_VEC_ERR_INIT_FAIL 204
+#define GDS_VEC_ERR_INIT_FAIL 204 // Occurs when init of underlying DS fails.
 #define GDS_VEC_ERR_CHUNK_GEN_FUNC_FAIL 3005 // Occurs when vector->_get_next_chunk_size_func returns 0
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ void* gds_vector_at(const GDSVector* vector, size_t pos);
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument.
  * Function may fail if 'vector' or 'data' are NULL or 'pos' is out of bounds('pos' >= vector's count). */
-gds_err gds_vector_assign(const GDSVector* vector, const void* data, size_t pos);
+gds_err gds_vector_assign(GDSVector* vector, const void* data, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -90,7 +90,7 @@ gds_err gds_vector_assign(const GDSVector* vector, const void* data, size_t pos)
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument.
  * Function may fail if 'vector' is NULL or 'pos1' or 'pos2' are out of bounds('pos' >= vector's count). */
-gds_err gds_vector_swap(const GDSVector* vector, size_t pos1, size_t pos2);
+gds_err gds_vector_swap(GDSVector* vector, size_t pos1, size_t pos2);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -150,7 +150,7 @@ gds_err gds_vector_remove_at(GDSVector* vector, size_t pos);
 // ---------------------------------------------------------------------------------------------------------------------
 
 // TODO - check for realloc() fails.
-/* Empties the vector. If the vector is already empty, the function performs no work and returns GDS_SUCESS.
+/* Empties the vector. If the vector is already empty, the function performs no work and returns GDS_SUCCESS.
  * This function will invoke vector->_on_element_removal_func for each removed element.
  * The vector will always retain capacity for the amount of elements passed to it in its init/create function.
  * Return value:
@@ -207,4 +207,3 @@ size_t gds_vector_get_struct_size();
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
 #endif // _GDS_VECTOR_H_
-

@@ -70,7 +70,7 @@ void* gds_light_vector_at(const GDSLightVector* vector, size_t pos);
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument.
  * Function may fail if 'vector' or 'data' are NULL or 'pos' is out of bounds('pos' >= vector's count). */
-gds_err gds_light_vector_assign(const GDSLightVector* vector, const void* data, size_t pos);
+gds_err gds_light_vector_assign(GDSLightVector* vector, const void* data, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ gds_err gds_light_vector_assign(const GDSLightVector* vector, const void* data, 
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument.
  * Function may fail if 'vector' is NULL or 'pos1' or 'pos2' are out of bounds('pos' >= vector's count). */
-gds_err gds_light_vector_swap(const GDSLightVector* vector, size_t pos1, size_t pos2);
+gds_err gds_light_vector_swap(GDSLightVector* vector, size_t pos1, size_t pos2);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

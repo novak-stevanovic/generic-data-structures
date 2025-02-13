@@ -112,7 +112,7 @@ void* gds_light_array_at(const GDSLightArray* array, size_t pos)
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_light_array_assign(const GDSLightArray* array, const void* data, size_t pos)
+gds_err gds_light_array_assign(GDSLightArray* array, const void* data, size_t pos)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(data == NULL) return GDS_GEN_ERR_INVALID_ARG(2);
@@ -127,7 +127,7 @@ gds_err gds_light_array_assign(const GDSLightArray* array, const void* data, siz
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_light_array_swap(const GDSLightArray* array, size_t pos1, size_t pos2)
+gds_err gds_light_array_swap(GDSLightArray* array, size_t pos1, size_t pos2)
 {
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(pos1 >= array->_count) return GDS_GEN_ERR_INVALID_ARG(2);

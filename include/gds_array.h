@@ -68,7 +68,7 @@ void* gds_array_at(const GDSArray* array, size_t pos);
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument.
  * Function may fail if 'array' or 'data' are NULL or 'pos' is out of bounds('pos' >= array's count). */
-gds_err gds_array_assign(const GDSArray* array, const void* data, size_t pos);
+gds_err gds_array_assign(GDSArray* array, const void* data, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -76,7 +76,7 @@ gds_err gds_array_assign(const GDSArray* array, const void* data, size_t pos);
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument.
  * Function may fail if 'array' is NULL or 'pos1' or 'pos2' are out of bounds('pos' >= array's count). */
-gds_err gds_array_swap(const GDSArray* array, size_t pos1, size_t pos2);
+gds_err gds_array_swap(GDSArray* array, size_t pos1, size_t pos2);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

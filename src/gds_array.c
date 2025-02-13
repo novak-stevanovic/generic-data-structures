@@ -73,14 +73,14 @@ void* gds_array_at(const GDSArray* array, size_t pos)
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_array_assign(const GDSArray* array, const void* data, size_t pos)
+gds_err gds_array_assign(GDSArray* array, const void* data, size_t pos)
 {
     return gds_light_array_assign(&array->_base, data, pos);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_array_swap(const GDSArray* array, size_t pos1, size_t pos2)
+gds_err gds_array_swap(GDSArray* array, size_t pos1, size_t pos2)
 {
     return gds_light_array_swap(&array->_base, pos1, pos2);
 }
