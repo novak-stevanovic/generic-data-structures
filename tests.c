@@ -1,98 +1,57 @@
 #include "gds_array.h"
 #include <assert.h>
 #include "gds_forward_list.h"
-#include "gds_light_array.h"
 #include "gds_vector.h"
 #include <stdio.h>
 #include <string.h>
 
 // size_t __gds_vector_chunk_list_get_sum(const _GDSVectorChunkList* chunk_list);
 
-void _debug_print_my_vec(GDSVector* vec)
-{
-    // printf("PRINTING VEC: %ld %ld %d\n", gds_vector_get_count(vec), gds_vector_get_capacity(vec), __gds_vector_chunk_list_get_sum(&vec->_chunks));
-    // void* el_addr;
-    // for(int i = 0; i < vec->_data._count; i++)
-    // {
-    //     el_addr = gds_vector_at(vec, i);
-    //     printf("%p ", el_addr);
-    //     if(el_addr != NULL)
-    //     {
-    //         printf("%d\t", *(int*)el_addr);
-    //     }
-    // }
-    // printf("\n");
-}
-
-void _debug_print_my_light_array(GDSLightArray* array)
-{
-    printf("PRINTING LIGHT ARRAY: %ld %ld\n", gds_light_array_get_count(array), gds_light_array_get_capacity(array));
-    void* el_addr;
-    for(int i = 0; i < gds_light_array_get_count(array); i++)
-    {
-        el_addr = gds_light_array_at(array, i);
-        if(el_addr != NULL)
-        {
-            printf("%d\t", *(int*)el_addr);
-        }
-    }
-    printf("\n");
-}
-
-void _debug_print_my_array(GDSArray* array)
-{
-    printf("PRINTING LIGHT ARRAY: %ld %ld\n", gds_array_get_count(array), gds_array_get_capacity(array));
-    void* el_addr;
-    for(int i = 0; i < gds_array_get_count(array); i++)
-    {
-        el_addr = gds_array_at(array, i);
-        if(el_addr != NULL)
-        {
-            printf("%d\t", *(int*)el_addr);
-        }
-    }
-    printf("\n");
-}
-
-void _debug_print_my_list(GDSForwardList* list, int verbose)
-{
-}
-
-size_t get_next_chunk(GDSVector* vec, size_t last_chunk_size)
-{
-    return last_chunk_size + 1;
-}
-
-size_t get_chunk(GDSVector* vector, size_t last_chunk_size)
-{
-    return 3;
-}
-
 int main(int argc, char *argv[])
 {
-    GDSVector* v = gds_vector_create(sizeof(size_t), NULL, 24, get_chunk, NULL);
+    GDSVector* v = gds_vector_create(sizeof(size_t), 100, 1.2, true);
 
-    size_t x = 69;
-    int stat;
-    stat = gds_vector_push_back(v, &x);
+    size_t a = 5;
 
-    x += 1;
-    stat = gds_vector_push_back(v, &x);
+    gds_err status;
+    status = gds_vector_push_back(v, &a);
 
-    x = 1;
-    stat = gds_vector_insert_at(v, &x, 0);
+    a = 6;
+    status = gds_vector_push_back(v, &a);
+    
+    a = 1;
+    status = gds_vector_insert_at(v, &a, 0);
 
-    x = 2;
-    stat = gds_vector_insert_at(v, &x, 1);
+    a = 1;
+    status = gds_vector_insert_at(v, &a, 0);
 
-    x = 0;
-    stat = gds_vector_assign(v, &x, 0);
+    a = 2;
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
 
-    stat = gds_vector_fit(v);
-    stat = gds_vector_reserve(v, 100000);
+    status = gds_vector_reserve(v, 1000000);
 
-    stat = gds_vector_pop_back(v);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
+    status = gds_vector_insert_at(v, &a, 1);
 
+    status = gds_vector_fit(v);
 
     // GDSArray* la = gds_array_create(100, sizeof(int), NULL, NULL);
     // int a = 10000000;
@@ -110,5 +69,7 @@ int main(int argc, char *argv[])
     // _debug_print_my_array(la);
     // gds_array_destruct(la);
     // _debug_print_my_array(la);
+    a = 0;
+    status = gds_vector_insert_at(v, &a, 0);
     return 0;
 }

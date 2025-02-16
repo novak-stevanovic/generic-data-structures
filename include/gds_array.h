@@ -25,7 +25,7 @@ typedef struct GDSArray GDSArray;
 
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
-/* Initializes GDSArray array. Used when opaque structs are disabled. May also be used for initializing
+/* Initializes array. Used when opaque structs are disabled. May also be used for initializing
  * an array after its destruction. Dynamically allocates enough memory to fit 'capacity' elements.
  * Return value:
  * on success - GDS_SUCCESS,
@@ -33,8 +33,7 @@ typedef struct GDSArray GDSArray;
  * Function may fail if 'array' is NULL, 'capacity' == 0, 'element_size' == 0.
  * Note: As any other init function, the function may fail if 'element_size' exceeds GDS_INIT_MAX_SIZE. This macro,
  * if defined, is defined in gds.h. */
-gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size, void (*on_element_removal_func)(void*),
-        bool (*compare_func)(void*, void*));
+gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -43,8 +42,7 @@ gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size, vo
  * on success - address of dynamically allocated GDSArray. 
  * on failure - NULL. The function can fail because: allocating memory for the new array failed, or because
  * gds_array_init() returned an error code. */
-GDSArray* gds_array_create(size_t capacity, size_t element_size, void (*on_element_removal_func)(void*),
-        bool (*compare_func)(void*, void*));
+GDSArray* gds_array_create(size_t capacity, size_t element_size);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -97,7 +95,7 @@ gds_err gds_array_push_back(GDSArray* array, const void* data);
  * otherwise it returns an error code.
  * Return value:
  * on success - GDS_SUCCESS,
- * on failure - one of the generic error codes representing an invalid argument or GDS_ARR_ERR_INSUFF_CAPACITY.
+ * on failure - one of the generic error codes representing an invalid argument or GDS__ARR_ERR_INSUFF_CAPACITY.
  * Function may fail if 'array' or 'data' are NULL or 'pos' is out of bounds('pos' >= array's count). */
 gds_err gds_array_insert_at(GDSArray* array, const void* data, size_t pos);
 
@@ -116,7 +114,6 @@ gds_err gds_array_remove_at(GDSArray* array, size_t pos);
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Removes last element in array by performing a call: gds_array_remove_at(array, array->count - 1);
- * This function will invoke array->_on_element_removal_func for the removed element.
  * Return value:
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument('array' is NULL) or 
@@ -126,7 +123,6 @@ gds_err gds_array_pop_back(GDSArray* array);
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Empties the array. If the array is already empty, the function performs no work and returns GDS_SUCCESS.
- * This function will invoke array->_on_element_removal_func for each removed element.
  * Return value:
  * on success: GDS_SUCCESS,
  * on failure: one of the generic error codes representing an invalid argument('array' is NULL). */
@@ -137,8 +133,7 @@ gds_err gds_array_empty(GDSArray* array);
 /* Performs a realloc() on array's data, so the new data can fit 'capacity' elements. If 'capacity' == array's current
  * capacity, the function returns immediately. 
  * Verbose explanation:
- * 1. If array's count > 'capacity', the array will shrink - array->on_element_removal_func() calls will be invoked
- * for each element removed.
+ * 1. If array's count > 'capacity', the array will shrink.
  * 2. A realloc() call will be performed. If the call succeeds, array's data will point to the new location.
  * If the call fails, array's data will point to the old location. If shrinking of the array occurred AND the realloc()
  * call failed, the array will remain shrunk.
