@@ -4,6 +4,7 @@
 #define __GDS_LIGHT_VECTOR_DEF_H__
 
 #include "gds.h"
+#include <stdbool.h>
 
 #ifndef __GDS_LIGHT_VECTOR_DEF_ALLOW__
 #error "Do not include directly."
@@ -18,6 +19,7 @@ struct GDSLightVector
 {
     struct GDSLightArray _data;
     double _resize_factor;
+    bool _dynamic_shrinking_enabled;
 };
 
 #endif // __GDS_LIGHT_VECTOR_DEF_H__

@@ -26,6 +26,7 @@ gds_err gds_light_vector_init(GDSLightVector* vector, size_t element_size, size_
     if(resize_factor <= 1) return GDS_GEN_ERR_INVALID_ARG(4);
 
     vector->_resize_factor = resize_factor;
+    vector->_dynamic_shrinking_enabled = true;
     gds_err init_status = gds_light_array_init(&vector->_data, initial_capacity, element_size);
 
     if(init_status != GDS_SUCCESS) return init_status;
@@ -168,14 +169,20 @@ gds_err gds_light_vector_empty(GDSLightVector* vector)
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_light_vector_prealloc(GDSLightVector* vector, size_t new_chunk_size)
+gds_err gds_light_vector_reserve(GDSLightVector* vector, size_t new_capacity)
 {
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(new_chunk_size == 0) return GDS_SUCCESS;
+    size_t vector_capacity = gds_light_vector_get_capacity(vector);
 
-    gds_err realloc_status = gds_light_array_realloc(&vector->_data, vector->_data._capacity + new_chunk_size);
+    if(new_capacity < vector_capacity) return GDS_GEN_ERR_INVALID_ARG(2);
+    else if(new_capacity == vector_capacity) return GDS_SUCCESS;
+
+    gds_err realloc_status = gds_light_array_realloc(&vector->_data, new_capacity);
     if(realloc_status != GDS_SUCCESS) return GDS_VEC_ERR_REALLOC_FAIL;
-    else return GDS_SUCCESS;
+
+    vector->_dynamic_shrinking_enabled = false;
+
+    return GDS_SUCCESS;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -186,7 +193,10 @@ gds_err gds_light_vector_fit(GDSLightVector* vector)
 
     gds_err realloc_status = gds_light_array_realloc(&vector->_data, vector->_data._count);
     if(realloc_status != GDS_SUCCESS) return GDS_VEC_ERR_REALLOC_FAIL;
-    else return GDS_SUCCESS;
+    
+    vector->_dynamic_shrinking_enabled = true;
+
+    return GDS_SUCCESS;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -245,8 +255,8 @@ static gds_err _gds_light_vector_expand_if_needed(GDSLightVector* vector)
 
 static gds_err _gds_light_vector_shrink_if_needed(GDSLightVector* vector)
 {
-
     if(vector == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
+    if(!(vector->_dynamic_shrinking_enabled)) return GDS_SUCCESS;
 
     size_t vector_count = vector->_data._count;
     size_t vector_capacity = vector->_data._capacity;

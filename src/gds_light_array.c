@@ -258,7 +258,7 @@ size_t gds_light_array_get_count(const GDSLightArray* array)
 
 bool gds_light_array_is_empty(const GDSLightArray* array)
 {
-    return (array != NULL) ? array->_element_size : true;
+    return (array != NULL) ? (array->_count == 0) : true;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

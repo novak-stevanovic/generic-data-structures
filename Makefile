@@ -9,7 +9,7 @@ CC = gcc
 C_SRC = $(shell find src -name "*.c")
 C_OBJ = $(patsubst src/%.c,build/%.o,$(C_SRC))
  
-BASE_C_FLAGS = -c -Wall -Iinclude -fPIC -MMD -MP
+BASE_C_FLAGS = -c -Wall -Iinclude -fPIC -MMD -MP -g
 
 define get_complete_base_cflags
 $(BASE_C_FLAGS) -MF build/dependencies/$(1).d
@@ -36,7 +36,7 @@ endif
 
 TEST_BIN = main
 TEST_BIN_LIB_FLAGS = $(EXTERNAL_LIB_FLAGS)
-TEST_C_FLAGS = -c -Iinclude -MMD -MP
+TEST_C_FLAGS = -c -Iinclude -MMD -MP -g
 
 define get_complete_test_cflags
 $(TEST_C_FLAGS) -MF build/dependencies/$(1).d

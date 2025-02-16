@@ -123,7 +123,7 @@ gds_err gds_array_pop_back(GDSArray* array)
 
     GDSLightArray* base = &array->_base;
 
-    if(array->_base._count == 0) return GDS_ARR_ERR_ARR_EMPTY;
+    if(base->_count == 0) return GDS_ARR_ERR_ARR_EMPTY;
 
     void* data = gds_light_array_at(&array->_base, (array->_base._count - 1));
     _gds_array_on_removal_func(array, data);

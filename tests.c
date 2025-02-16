@@ -63,23 +63,52 @@ size_t get_next_chunk(GDSVector* vec, size_t last_chunk_size)
     return last_chunk_size + 1;
 }
 
+size_t get_chunk(GDSVector* vector, size_t last_chunk_size)
+{
+    return 3;
+}
+
 int main(int argc, char *argv[])
 {
-    GDSArray* la = gds_array_create(100, sizeof(int), NULL, NULL);
-    int a = 10;
+    GDSVector* v = gds_vector_create(sizeof(size_t), NULL, 24, get_chunk, NULL);
 
-    _debug_print_my_array(la);
-    printf("S: %d\n", gds_array_push_back(la, &a));
-    a = 17;
-    printf("S: %d\n", gds_array_insert_at(la, &a, 0));
-    a = 19;
-    printf("S: %d\n", gds_array_push_back(la, &a));
-    a = 12;
-    printf("S: %d\n", gds_array_push_back(la, &a));
-    _debug_print_my_array(la);
-    printf("pop back status: %d\n", gds_array_pop_back(la));
-    _debug_print_my_array(la);
-    gds_array_destruct(la);
-    _debug_print_my_array(la);
+    size_t x = 69;
+    int stat;
+    stat = gds_vector_push_back(v, &x);
+
+    x += 1;
+    stat = gds_vector_push_back(v, &x);
+
+    x = 1;
+    stat = gds_vector_insert_at(v, &x, 0);
+
+    x = 2;
+    stat = gds_vector_insert_at(v, &x, 1);
+
+    x = 0;
+    stat = gds_vector_assign(v, &x, 0);
+
+    stat = gds_vector_fit(v);
+    stat = gds_vector_reserve(v, 100000);
+
+    stat = gds_vector_pop_back(v);
+
+
+    // GDSArray* la = gds_array_create(100, sizeof(int), NULL, NULL);
+    // int a = 10000000;
+    //
+    // _debug_print_my_array(la);
+    // gds_array_push_back(la, &a);
+    // a = 17;
+    // gds_array_insert_at(la, &a, 0);
+    // a = 19;
+    // gds_array_push_back(la, &a);
+    // a = 12;
+    // gds_array_push_back(la, &a);
+    // _debug_print_my_array(la);
+    // gds_array_pop_back(la);
+    // _debug_print_my_array(la);
+    // gds_array_destruct(la);
+    // _debug_print_my_array(la);
     return 0;
 }

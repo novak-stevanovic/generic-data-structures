@@ -142,20 +142,20 @@ gds_err gds_light_vector_empty(GDSLightVector* vector);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Function will preallocate a new chunk of memory for the vector to store its elements. This will result in a realloc()
- * call that will expand the vector and increase its capacity. If 'new_chunk_size' == 0, the function will perform
- * no action.
+/* Reserves enough memory to fit 'new_capacity' elements. If 'new_capacity' < vector's current capacity - the
+ * function returns an invalid argument error code. If 'new_capacity' == vector's current capacity -
+ * the function performs nothing. This will perform a realloc() call so the vector can be expanded.
+ * This function will effectively disable dynamic shrinking until gds_light_vector_fit() has been performed. 
  * Return value:
  * on success: GDS_SUCCESS,
- * on failure: one of the generic error codes representing an invalid argument or GDS_VEC_ERR_REALLOC_FAIL.
- * Function may fail if 'vector' is NULL or 'new_chunk_size' == 0 or realloc() fails to accomodate the new capacity.
- * If the realloc fails, the vector will retain its old capacity. */
-gds_err gds_light_vector_prealloc(GDSLightVector* vector, size_t new_chunk_size);
+ * on failure: one of the generic error codes representing an invalid argument or GDS_VEC_ERR_REALLOC_FAIL.*/
+gds_err gds_light_vector_reserve(GDSLightVector* vector, size_t new_capacity);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Function will shrink the vector's capacity so it can exactly fit its count. If the vector's capacity == vector's
- * count, the function performs no work. This will result in a realloc() call.
+ * count, the function performs no work. This will result in a realloc() call. A call to this function
+ * will re-enable dynamic vector shrinking.
  * Return value:
  * on success: GDS_SUCCESS,
  * on failure: one of the generic error codes representing an invalid argument or GDS_VEC_ERR_REALLOC_FAIL.

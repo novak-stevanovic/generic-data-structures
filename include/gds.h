@@ -2,7 +2,9 @@
 #define GDS_H
 
 // TODO add restrict to func params and inline to func signatures
-// TODO error codes for init funcs
+// TODO check error codes for everything
+// TODO bring back GDS and GDSE naming
+// TODO test light vector and other stuff
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 
