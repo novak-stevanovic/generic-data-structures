@@ -15,6 +15,10 @@ struct GDSVector;
 
 typedef struct GDSVector GDSVector;
 
+#define GDS_VEC_DEFAULT_RESIZE_FACTOR 2
+#define GDS_VEC_DEFAULT_INITIAL_CAPACITY 10
+#define GDS_VEC_MIN_RESIZE_FACTOR 1.1
+
 // ------------------------------------------------------------------------------------------------------------------------------------------
 
 #define GDS_VEC_ERR_BASE 200
@@ -30,13 +34,12 @@ typedef struct GDSVector GDSVector;
  * Return value:
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument, GDS_VEC_ERR_MALLOC_FAIL or
- * GDS_VEC_ERR_INIT_FAIL. Function may fail: if 'vector is NULL', if 'element_size' == 0, if 'initial_capacity' == 0.
- * Function may also return GDS_ARR_ERR_MALLOC_FAIL if dynamic allocation for the vector's data fails. Function may also
- * return GDS_VEC_ERR_INIT_FAIL if initializing of internal GDSArray.
+ * GDS_VEC_ERR_INIT_FAIL. Function may fail: if 'vector is NULL', if 'element_size' == 0, if 'initial_capacity' == 0,
+ * if resize_factor is <= GDS_VEC_MIN_RESIZE_FACTOR.
+ * Function may also return GDS_ARR_ERR_MALLOC_FAIL if dynamic allocation for the vector's data fails. 
  * Note: As any other init function, the function may fail if 'data_size' exceeds GDS_INIT_MAX_SIZE. This macro,
  * if defined, is defined in gds.h. */
-gds_err gds_vector_init(GDSVector* vector, size_t element_size, size_t initial_capacity, double resize_factor,
-        bool dynamic_shrinking_enabled);
+gds_err gds_vector_init(GDSVector* vector, size_t element_size, size_t initial_capacity, double resize_factor);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -45,8 +48,21 @@ gds_err gds_vector_init(GDSVector* vector, size_t element_size, size_t initial_c
  * on success - address of dynamically allocated GDSVector. 
  * on failure - NULL. The function can fail because: allocating memory for the new vector failed, or because
  * gds_vector_init() returned an error code. */
-GDSVector* gds_vector_create(size_t element_size, size_t initial_capacity, double resize_factor, bool
-        dynamic_shrinking_enabled);
+GDSVector* gds_vector_create(size_t element_size, size_t initial_capacity, double resize_factor);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+/* Performs a call to gds_vector_init(). Passes GDS_VEC_DEFAULT_RESIZE_FACTOR and GDS_VEC_DEFAULT_INITIAL_CAPACITY
+ * as values to the init function.
+ * Return value is the same as gds_vector_init(). */
+gds_err gds_vector_init_default(GDSVector* vector, size_t element_size);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+/* Performs a call to gds_vector_create(). Passes GDS_VEC_DEFAULT_RESIZE_FACTOR and GDS_VEC_DEFAULT_INITIAL_CAPACITY
+ * as values to the create function.
+ * Return value is the same as gds_vector_create(). */
+GDSVector* gds_vector_create_default(size_t element_size);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -154,12 +170,24 @@ gds_err gds_vector_reserve(GDSVector* vector, size_t new_capacity);
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Function will shrink the vector's capacity so it can exactly fit its count. If the vector's capacity == vector's
- * count, the function performs no work. This will result in a realloc() call.
+ * count, the function performs no work. If vector's count == 0, the vector will allocate enough space
+ * to fit one element. This function will result in a realloc() call.
  * Return value:
  * on success: GDS_SUCCESS,
  * on failure: one of the generic error codes representing an invalid argument or GDS_VEC_ERR_REALLOC_FAIL.
  * If the realloc fails, the vector will retain its old capacity. */
 gds_err gds_vector_fit(GDSVector* vector);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+/* Sets resize factor of vector. This will impact future resize operations. 'new_resize_factor' must be
+ * greater than 1. */
+gds_err gds_vector_set_resize_factor(GDSVector* vector, double new_resize_factor);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+/* Gets resize factor of vector. Assumes non-NULL argument. */
+double gds_vector_get_resize_factor(const GDSVector* vector);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

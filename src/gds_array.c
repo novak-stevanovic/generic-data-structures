@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "gds.h"
 #include "gds_misc.h"
@@ -46,17 +45,6 @@ gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size)
 
     if(array->_data == NULL) return GDS_ARR_ERR_MALLOC_FAIL;
 
-#ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
-
-    array->_swap_buff = malloc(element_size);
-    if(array->_swap_buff == NULL)
-    {
-        free(array->_data);
-        return GDS_ARR_ERR_MALLOC_FAIL;
-    }
-
-#endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
-
     return GDS_SUCCESS;
 }
 
@@ -91,13 +79,6 @@ void gds_array_destruct(GDSArray* array)
     array->_count = 0;
     array->_capacity = 0;
     array->_element_size = 0;
-
-#ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
-
-    free(array->_swap_buff);
-    array->_swap_buff = NULL;
-
-#endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -107,7 +88,7 @@ void* gds_array_at(const GDSArray* array, size_t pos)
     if(array == NULL) return NULL;
     if(pos >= array->_count) return NULL;
 
-    return array->_data + pos * array->_element_size;
+    return (array->_data + (pos * array->_element_size));
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -121,44 +102,6 @@ gds_err gds_array_assign(GDSArray* array, const void* data, size_t pos)
     void* addr = gds_array_at(array, pos);
 
     memcpy(addr, data, array->_element_size);
-
-    return GDS_SUCCESS;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------
-
-gds_err gds_array_swap(GDSArray* array, size_t pos1, size_t pos2)
-{
-    if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
-    if(pos1 >= array->_count) return GDS_GEN_ERR_INVALID_ARG(2);
-    if(pos2 >= array->_count) return GDS_GEN_ERR_INVALID_ARG(3);
-
-    if(pos1 == pos2) return GDS_SUCCESS;
-
-    void* pos1_data = gds_array_at(array, pos1);
-    void* pos2_data = gds_array_at(array, pos2);
-
-    size_t data_size = array->_element_size;
-
-#ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
-
-    void* swap_buff = array->_swap_buff;
-
-#endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
-#ifdef GDS_TEMP_BUFF_USE_VLA
-
-    char swap_buff[data_size];
-
-#endif // GDS_TEMP_BUFF_USE_VLA
-#ifdef GDS_TEMP_BUFF_USE_ALLOCA
-
-    void* swap_buff = alloca(data_size);
-
-#endif // GDS_TEMP_BUFF_USE_ALLOCA
-
-    memcpy(swap_buff, pos1_data, data_size);
-    memcpy(pos1_data, pos2_data, data_size);
-    memcpy(pos2_data, swap_buff, data_size);
 
     return GDS_SUCCESS;
 }

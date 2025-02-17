@@ -23,7 +23,11 @@ and end_pos, where end_pos must be greater than start_pos.
 2. GDS_GEN_ERR_INVALID_ARG - refers to the case where a call to a function has been performed,
 while providing an invalid argument. Why the argument may be invalid, depends on the function in 
 question - perhaps it was a NULL pointer, perhaps it was an invalid number. The function will return
-a value, x being the 'index' of the invalid argument(starting from 1). */
+a value, x being the 'index' of the invalid argument(starting from 1). 
+
+3. GDS_GEN_ERR_INERNAL_ERR - refers to the case where a function in the API relies on a call to an internal
+function which failed. In this case, the library is at fault. The API doesn't mention this error because it
+is a valid return value for functions that return gds_err by default. */
 
 typedef int gds_err;
 
@@ -35,6 +39,7 @@ typedef int gds_err;
 #define _GDS_GEN_ERR_INVALID_ARG_BASE (_GDS_GEN_ERR_BASE + 10)
 #define GDS_GEN_ERR_INCONSISTENT_ARGS (_GDS_GEN_ERR_INVALID_ARG_BASE + 0)
 #define GDS_GEN_ERR_INVALID_ARG(x) (_GDS_GEN_ERR_INVALID_ARG_BASE + x)
+#define GDS_GEN_ERR_INTERNAL_ERR 1002
 
 // Struct opaqueness ------------------------------------------------------------------------------------------------------
 
@@ -61,9 +66,11 @@ structs not opaque. This can be done by commenting the macro below (GDS_ENABLE_O
  * means that the user must be careful when passing data/element_size arguments to DS init functions. To change this behavior,
  * define **one** of the macros below and comment out the others. */
 
-// #define GDS_TEMP_BUFF_USE_SWAP_BUFF // 1. option
-#define GDS_TEMP_BUFF_USE_VLA // 2. option
+#define GDS_TEMP_BUFF_USE_SWAP_BUFF // 1. option
+// #define GDS_TEMP_BUFF_USE_VLA // 2. option
 // #define GDS_TEMP_BUFF_USE_ALLOCA // 3. option
+
+#define __GDS_SWAP_BUFF_NAME __swap_buff
 
 /* As an extra precaution, when using VLA's or alloca(), you may want to define the macro below(and adjust its definition).
  * Whenever an init function is called for any data structure, a check will be performed to see if the passed data_size

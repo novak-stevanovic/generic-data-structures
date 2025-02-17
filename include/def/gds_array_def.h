@@ -19,9 +19,6 @@ struct GDSArray
     size_t _capacity; // array capacity,
     size_t _element_size; // size of each element,
     void* _data; // address of array's data beginning.
-    #ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
-    void* _swap_buff;
-    #endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
 };
 
 #endif // __GDS_ARRAY_DEF_H__

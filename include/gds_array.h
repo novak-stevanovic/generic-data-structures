@@ -70,14 +70,6 @@ gds_err gds_array_assign(GDSArray* array, const void* data, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Swaps the data of elements at pos1 and pos2. If 'pos1' == 'pos2', the function performs no action.
- * on success - GDS_SUCCESS,
- * on failure - one of the generic error codes representing an invalid argument.
- * Function may fail if 'array' is NULL or 'pos1' or 'pos2' are out of bounds('pos' >= array's count). */
-gds_err gds_array_swap(GDSArray* array, size_t pos1, size_t pos2);
-
-// ---------------------------------------------------------------------------------------------------------------------
-
 /* Appends data pointed to by data to the end of the array. Performs the call: 
  * gds_array_insert_at(array, data, array->count). The function will not be able to append the new element if
  * the array is at its capacity. In this case, it returns an appropriate error code.
