@@ -180,6 +180,10 @@ gds_err gds_vector_fit(GDSVector* vector);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+ssize_t gds_vector_find(GDSVector* vector, const void* data, bool (*compare_func)(const void*, const void*));
+
+// ---------------------------------------------------------------------------------------------------------------------
+
 /* Sets resize factor of vector. This will impact future resize operations. 'new_resize_factor' must be
  * greater than 1. */
 gds_err gds_vector_set_resize_factor(GDSVector* vector, double new_resize_factor);

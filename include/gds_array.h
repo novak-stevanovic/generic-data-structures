@@ -70,7 +70,7 @@ gds_err gds_array_assign(GDSArray* array, const void* data, size_t pos);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Appends data pointed to by data to the end of the array. Performs the call: 
+/* Appends data pointed to by 'data' to the end of the array. Performs the call: 
  * gds_array_insert_at(array, data, array->count). The function will not be able to append the new element if
  * the array is at its capacity. In this case, it returns an appropriate error code.
  * Return value:
@@ -81,7 +81,7 @@ gds_err gds_array_push_back(GDSArray* array, const void* data);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-/* Inserts data pointed to by data to index pos in the array. This is done by shifting all elements with
+/* Inserts data pointed to by 'data' to index pos in the array. This is done by shifting all elements with
  * index greater or equal than 'pos' rightward(through a memmove() call), and inserting the element at the empty spot.
  * If pos == array's count, no shifting is performed. This function only works if the array is not at its capacity,
  * otherwise it returns an error code.
@@ -134,6 +134,10 @@ gds_err gds_array_empty(GDSArray* array);
  * on failure - one of gds generic error codes or GDS_ARR_ERR_REALLOC_FAIL.
  * Function may fail if 'array' is NULL or 'capacity' == 0.*/
 gds_err gds_array_realloc(GDSArray* array, size_t capacity);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+ssize_t gds_array_find(GDSArray* array, const void* data, bool (*compare_func)(const void*, const void*));
 
 // ---------------------------------------------------------------------------------------------------------------------
 

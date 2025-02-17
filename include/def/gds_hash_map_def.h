@@ -18,7 +18,8 @@ struct GDSHashMap
     struct GDSVector _data;
 
     size_t _key_data_size, _value_data_size;
-    size_t (*_hash_func)(void* key);
+    size_t (*_hash_func)(const void* key, size_t max_value);
+    bool (*_key_compare_func)(const void* key1, const void* key2);
 
     double _max_load_factor;
     size_t _entry_count;

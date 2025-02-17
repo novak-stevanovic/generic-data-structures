@@ -221,6 +221,12 @@ gds_err gds_vector_set_resize_factor(GDSVector* vector, double new_resize_factor
 
     return GDS_SUCCESS;
 }
+// ---------------------------------------------------------------------------------------------------------------------
+
+ssize_t gds_vector_find(GDSVector* vector, const void* data, bool (*compare_func)(const void*, const void*))
+{
+    return gds_array_find(&vector->_data, data, compare_func);
+}
 
 // ---------------------------------------------------------------------------------------------------------------------
 

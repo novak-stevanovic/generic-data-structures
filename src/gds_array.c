@@ -192,6 +192,27 @@ gds_err gds_array_realloc(GDSArray* array, size_t new_capacity)
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+ssize_t gds_array_find(GDSArray* array, const void* data, bool (*compare_func)(const void*, const void*))
+{
+    if(array == NULL) return -1;
+    if(data == NULL) return -1;
+    if(compare_func == NULL) return -1;
+
+    size_t array_count = gds_array_get_count(array);
+
+    size_t i;
+    void* curr_element;
+    for(i = 0; i < array_count; i++)
+    {
+        curr_element = gds_array_at(array, i);
+        if(compare_func(curr_element, data) == 0) return i;
+    }
+
+    return -1;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
 size_t gds_array_get_count(const GDSArray* array)
 {
     return (array != NULL) ? array->_count : 0;
