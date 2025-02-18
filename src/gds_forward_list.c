@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "gds.h"
+#include "gds_misc.h"
 #include "gds_forward_list.h"
 
 #ifdef GDS_ENABLE_OPAQUE_STRUCTS
@@ -46,10 +47,6 @@ static void* _gds_forward_list_get_data_for_node(_GDSForwardListNodeBase* node);
 
 gds_err gds_forward_list_init(GDSForwardList* list, size_t data_size, void (*_on_element_removal_func)(void*))
 {
-#ifdef GDS_INIT_MAX_SIZE
-    if(data_size > GDS_INIT_MAX_SIZE) return GDS_ERR_MAX_INIT_SIZE_EXCEED;
-#endif // GDS_INIT_MAX_SIZE
-
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(data_size == 0) return GDS_GEN_ERR_INVALID_ARG(2);
 
@@ -58,11 +55,6 @@ gds_err gds_forward_list_init(GDSForwardList* list, size_t data_size, void (*_on
     list->_tail = NULL;
     list->_data_size = data_size;
     list->_on_element_removal_func = _on_element_removal_func;
-
-    #ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
-    list->_swap_buff = malloc(data_size);
-    if(list->_swap_buff == NULL) return GDS_FWDLIST_ERR_MALLOC_FAIL;
-    #endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
     
     return GDS_SUCCESS;
 }
@@ -100,12 +92,6 @@ void gds_forward_list_destruct(GDSForwardList* list)
     list->_data_size = 0;
     list->_count = 0;
     list->_on_element_removal_func = NULL;
-
-#ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
-    free(list->_swap_buff);
-    list->_swap_buff = NULL;
-#endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
-
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -136,11 +122,12 @@ gds_err gds_forward_list_assign(GDSForwardList* list, const void* data, size_t p
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-gds_err gds_forward_list_swap(GDSForwardList* list, size_t pos1, size_t pos2)
+gds_err gds_forward_list_swap(GDSForwardList* list, size_t pos1, size_t pos2, void* swap_buff)
 {
     if(list == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(pos1 >= list->_count) return GDS_GEN_ERR_INVALID_ARG(2);
     if(pos2 >= list->_count) return GDS_GEN_ERR_INVALID_ARG(3);
+    if(swap_buff == NULL) return GDS_GEN_ERR_INVALID_ARG(4);
 
     if(pos1 == pos2) return GDS_SUCCESS;
 
@@ -149,25 +136,7 @@ gds_err gds_forward_list_swap(GDSForwardList* list, size_t pos1, size_t pos2)
 
     size_t data_size = list->_data_size;
 
-#ifdef GDS_TEMP_BUFF_USE_SWAP_BUFF
-
-    void* swap_buff = list->_swap_buff;
-
-#endif // GDS_TEMP_BUFF_USE_SWAP_BUFF
-#ifdef GDS_TEMP_BUFF_USE_VLA
-
-    char swap_buff[data_size];
-
-#endif // GDS_TEMP_BUFF_USE_VLA
-#ifdef GDS_TEMP_BUFF_USE_ALLOCA
-
-    void* swap_buff = alloca(data_size);
-
-#endif // GDS_TEMP_BUFF_USE_ALLOCA
-
-    memcpy(swap_buff, data1, data_size);
-    memcpy(data1, data2, data_size);
-    memcpy(data2, swap_buff, data_size);
+    gds_misc_swap(data1, data2, swap_buff, data_size);
 
     return GDS_SUCCESS;
 }

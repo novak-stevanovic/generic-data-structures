@@ -30,9 +30,7 @@ typedef struct GDSArray GDSArray;
  * Return value:
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument, or GDS_ARR_ERR_MALLOC_FAIL.
- * Function may fail if 'array' is NULL, 'capacity' == 0, 'element_size' == 0.
- * Note: As any other init function, the function may fail if 'element_size' exceeds GDS_INIT_MAX_SIZE. This macro,
- * if defined, is defined in gds.h. */
+ * Function may fail if 'array' is NULL, 'capacity' == 0, 'element_size' == 0. */
 gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size);
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -67,6 +65,15 @@ void* gds_array_at(const GDSArray* array, size_t pos);
  * on failure - one of the generic error codes representing an invalid argument.
  * Function may fail if 'array' or 'data' are NULL or 'pos' is out of bounds('pos' >= array's count). */
 gds_err gds_array_assign(GDSArray* array, const void* data, size_t pos);
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+/* Swaps the data of elements at pos1 and pos2. If 'pos1' == 'pos2', the function performs no action.
+ * on success - GDS_SUCCESS,
+ * on failure - one of the generic error codes representing an invalid argument.
+ * Function may fail if 'array or 'swap_buff'' are NULL or 'pos1' or 'pos2' 
+ * are out of bounds('pos' >= array's count). */
+gds_err gds_array_swap(GDSArray* array, size_t pos1, size_t pos2, void* swap_buff);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

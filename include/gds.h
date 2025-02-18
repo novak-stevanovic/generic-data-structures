@@ -49,37 +49,6 @@ structs not opaque. This can be done by commenting the macro below (GDS_ENABLE_O
 
 #define GDS_ENABLE_OPAQUE_STRUCTS
 
-// Stack allocation and temporary memory buffers --------------------------------------------------------------------------
-
-/* Many data structures have built-in supported functions that require allocating a tempoprary memory buffer with the
- * size equal to the data size stored by that data structure. The prime example of this are the swap functions for
- * each data structure. However, it's impossible to know the data size at compile time.
- * This leaves a few ways for the library to handle this situation:
- * 1. Each data structure that requires such a buffer will, when initializing, dynamically allocate the buffer and store it.
- * It will then use this buffer for operations that require it. This results in a slightly bigger memory footprint.
- * 2. Variable-length arrays(VLA's). Operations that require such a buffer will initialize a VLA that is big enough
- * to accomodate the data size.
- * 3. The usage of alloca(). Operations that require such a buffer will use the alloca() function as the temporary buffer. 
- *
- * If the user wishes for portability, he should choose the first option. If he wishes for less memory footprint, choose
- * the 2. or 3. options. Keep in mind that 2. and 3. options are theoretically unsafe because stack allocations may fail. This
- * means that the user must be careful when passing data/element_size arguments to DS init functions. To change this behavior,
- * define **one** of the macros below and comment out the others. */
-
-#define GDS_TEMP_BUFF_USE_SWAP_BUFF // 1. option
-// #define GDS_TEMP_BUFF_USE_VLA // 2. option
-// #define GDS_TEMP_BUFF_USE_ALLOCA // 3. option
-
-#define __GDS_SWAP_BUFF_NAME __swap_buff
-
-/* As an extra precaution, when using VLA's or alloca(), you may want to define the macro below(and adjust its definition).
- * Whenever an init function is called for any data structure, a check will be performed to see if the passed data_size
- * argument doesn't exceed the value defined. If it isn't a special error code will be returned. */
-
-#define GDS_INIT_MAX_SIZE 200
-
-#define GDS_ERR_MAX_INIT_SIZE_EXCEED 1001
-
 // ------------------------------------------------------------------------------------------------------------------------------------
 
 #endif // GDS_H

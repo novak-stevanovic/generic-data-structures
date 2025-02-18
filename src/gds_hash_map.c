@@ -16,6 +16,8 @@ typedef struct
     void* value_ptr;
 } _GDSBucketElement;
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static _GDSBucketElement* _gds_hash_map_get_bucket_element(const GDSHashMap* hash_map, const void* key)
 {
     size_t hash_code = hash_map->_hash_func(key, gds_vector_get_capacity(&hash_map->_data));

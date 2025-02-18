@@ -36,9 +36,7 @@ typedef struct GDSVector GDSVector;
  * on failure - one of the generic error codes representing an invalid argument, GDS_VEC_ERR_MALLOC_FAIL or
  * GDS_VEC_ERR_INIT_FAIL. Function may fail: if 'vector is NULL', if 'element_size' == 0, if 'initial_capacity' == 0,
  * if resize_factor is <= GDS_VEC_MIN_RESIZE_FACTOR.
- * Function may also return GDS_ARR_ERR_MALLOC_FAIL if dynamic allocation for the vector's data fails. 
- * Note: As any other init function, the function may fail if 'data_size' exceeds GDS_INIT_MAX_SIZE. This macro,
- * if defined, is defined in gds.h. */
+ * Function may also return GDS_ARR_ERR_MALLOC_FAIL if dynamic allocation for the vector's data fails. */
 gds_err gds_vector_init(GDSVector* vector, size_t element_size, size_t initial_capacity, double resize_factor);
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -94,8 +92,9 @@ gds_err gds_vector_assign(GDSVector* vector, const void* data, size_t pos);
 /* Swaps the data of elements at pos1 and pos2. If 'pos1' == 'pos2', the function performs no action.
  * on success - GDS_SUCCESS,
  * on failure - one of the generic error codes representing an invalid argument.
- * Function may fail if 'vector' is NULL or 'pos1' or 'pos2' are out of bounds('pos' >= vector's count). */
-gds_err gds_vector_swap(GDSVector* vector, size_t pos1, size_t pos2);
+ * Function may fail if 'vector or 'swap_buff'' are NULL or 'pos1' or 'pos2' 
+ * are out of bounds('pos' >= vector's count). */
+gds_err gds_vector_swap(GDSVector* vector, size_t pos1, size_t pos2, void* swap_buff);
 
 // ---------------------------------------------------------------------------------------------------------------------
 

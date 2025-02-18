@@ -1,5 +1,6 @@
 #include "gds.h"
 #include "gds_array.h"
+#include "gds_misc.h"
 #include "gds_vector.h"
 
 #include <assert.h>
@@ -22,10 +23,6 @@ gds_err gds_vector_init(GDSVector* vector, size_t element_size, size_t initial_c
     if(element_size == 0) return GDS_GEN_ERR_INVALID_ARG(2);
     if(initial_capacity == 0) return GDS_GEN_ERR_INVALID_ARG(3);
     if(resize_factor <= GDS_VEC_MIN_RESIZE_FACTOR) return GDS_GEN_ERR_INVALID_ARG(4);
-
-#ifdef GDS_INIT_MAX_SIZE
-    if(element_size > GDS_INIT_MAX_SIZE) return GDS_ERR_MAX_INIT_SIZE_EXCEED;
-#endif // GDS_INIT_MAX_SIZE
 
     vector->_resize_factor = resize_factor;
 
@@ -113,6 +110,13 @@ gds_err gds_vector_push_back(GDSVector* vector, const void* data)
     if(push_back_status != GDS_SUCCESS) return GDS_GEN_ERR_INTERNAL_ERR;
 
     return GDS_SUCCESS;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+gds_err gds_vector_swap(GDSVector* vector, size_t pos1, size_t pos2, void* swap_buff)
+{
+    return gds_array_swap(&vector->_data, pos1, pos2, swap_buff);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -282,7 +286,7 @@ static gds_err _gds_vector_update_capacity(GDSVector* vector)
 
     if(vector_count == vector_capacity)
     {
-        gds_err realloc_status = gds_array_realloc(&vector->_data, ((size_t)vector_count * vector->_resize_factor));
+        gds_err realloc_status = gds_array_realloc(&vector->_data, ((size_t)vector_count * resize_factor));
         if(realloc_status != GDS_SUCCESS) return GDS_VEC_ERR_REALLOC_FAIL;
     }
 

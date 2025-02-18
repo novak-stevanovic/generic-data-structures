@@ -29,10 +29,6 @@ static void _gds_array_shift_left(GDSArray* array, size_t start_idx);
 
 gds_err gds_array_init(GDSArray* array, size_t capacity, size_t element_size)
 {
-#ifdef GDS_INIT_MAX_SIZE
-    if(element_size > GDS_INIT_MAX_SIZE) return GDS_ERR_MAX_INIT_SIZE_EXCEED;
-#endif // GDS_INIT_MAX_SIZE
-
     if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
     if(capacity == 0) return GDS_GEN_ERR_INVALID_ARG(2);
     if(element_size == 0) return GDS_GEN_ERR_INVALID_ARG(3);
@@ -102,6 +98,31 @@ gds_err gds_array_assign(GDSArray* array, const void* data, size_t pos)
     void* addr = gds_array_at(array, pos);
 
     memcpy(addr, data, array->_element_size);
+
+    return GDS_SUCCESS;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+gds_err gds_array_swap(GDSArray* array, size_t pos1, size_t pos2, void* swap_buff)
+{
+    if(array == NULL) return GDS_GEN_ERR_INVALID_ARG(1);
+
+    size_t array_count = gds_array_get_count(array);
+
+    if(pos1 >= array_count) return GDS_GEN_ERR_INVALID_ARG(2);
+    if(pos2 >= array_count) return GDS_GEN_ERR_INVALID_ARG(3);
+
+    if(swap_buff == NULL) return GDS_GEN_ERR_INVALID_ARG(4);
+
+    if(pos1 == pos2) return GDS_SUCCESS;
+
+    void* data1 = gds_array_at(array, pos1);
+    void* data2 = gds_array_at(array, pos2);
+
+    size_t data_size = gds_array_get_element_size(array);
+
+    gds_misc_swap(data1, data2, swap_buff, data_size);
 
     return GDS_SUCCESS;
 }

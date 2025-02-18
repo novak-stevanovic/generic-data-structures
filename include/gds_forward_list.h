@@ -32,9 +32,7 @@ typedef struct GDSForwardListIterator GDSForwardListIterator;
  * data_size must be greater than 0. _on_element_removal_func may be NULL.
  * Return value:
  * on success: GDS_SUCCESS,
- * on failure: one of the generic error codes representing invalid arguments or GDS_FWDLIST_ERR_MALLOC_FAIL. 
- * Note: As any other init function, the function may fail if 'data_size' exceeds GDS_INIT_MAX_SIZE. This macro,
- * if defined, is defined gds.h. */
+ * on failure: one of the generic error codes representing invalid arguments or GDS_FWDLIST_ERR_MALLOC_FAIL. */
 gds_err gds_forward_list_init(GDSForwardList* list, size_t data_size, void (*_on_element_removal_func)(void*));
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -75,11 +73,12 @@ gds_err gds_forward_list_assign(GDSForwardList* list, const void* data, size_t p
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Functions swaps data of elements with indices 'pos1' and 'pos2'. Function performs no action if pos1 == pos2.
+ * Make sure that swap_buff is of at least list->data_size size.
  * Return value:
  * on success: GDS_SUCCESS,
  * on failure: one of the generic error codes representing invalid arguments.
- * Function may fail if 'list' is NULL or 'pos1' or 'pos2' are out of bounds. */
-gds_err gds_forward_list_swap(GDSForwardList* list, size_t pos1, size_t pos2);
+ * Function may fail if 'list' or 'swap_buff' are NULL or 'pos1' or 'pos2' are out of bounds. */
+gds_err gds_forward_list_swap(GDSForwardList* list, size_t pos1, size_t pos2, void* swap_buff);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
